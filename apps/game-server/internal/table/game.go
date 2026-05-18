@@ -167,9 +167,52 @@ func (g *Game) ProcessAction(action Action) error {
 		g.Pot.AddBet(player.ID, player.Bet)
 
 	case ActionBet, ActionRaise:
-		// For simplicity in this phase, treat bet/raise as all-in or minimum
-		// Full bet sizing logic will be in Task 10
-		return fmt.Errorf("bet/raise not yet implemented")
+		if action.Amount <= 0 {
+			return fmt.Errorf("bet/raise amount must be positive")
+		}
+
+		// Calculate minimum allowed bet/raise
+		minAmount := g.highestBet
+		if g.highestBet == 0 {
+			// No previous bet this round — minimum bet is 1 big blind
+			minAmount = g.Table.Config.BigBlind
+		} else {
+			// Raise must be at least last raise size more than current highest bet
+			minAmount = g.highestBet + g.LastRaise
+		}
+
+		if action.Amount < minAmount {
+			return fmt.Errorf("bet/raise must be at least %d", minAmount)
+		}
+		if action.Amount > player.Stack+player.Bet {
+			return fmt.Errorf("insufficient stack for bet/raise")
+		}
+
+		// If betting all their stack, it's an all-in
+		if action.Amount >= player.Stack+player.Bet {
+			allInAmount := player.Stack
+			player.Stack = 0
+			player.Bet += allInAmount
+			player.TotalBet += allInAmount
+			g.Pot.AddBet(player.ID, player.Bet)
+			if player.Bet > g.highestBet {
+				raiseSize := player.Bet - g.highestBet
+				g.LastRaise = raiseSize
+				g.highestBet = player.Bet
+				g.LastAggressor = g.CurrentTurn
+			}
+			player.Status = AllIn
+		} else {
+			additional := action.Amount - player.Bet
+			player.Stack -= additional
+			player.Bet = action.Amount
+			player.TotalBet += additional
+			g.Pot.AddBet(player.ID, player.Bet)
+			raiseSize := action.Amount - g.highestBet
+			g.LastRaise = raiseSize
+			g.highestBet = action.Amount
+			g.LastAggressor = g.CurrentTurn
+		}
 
 	case ActionAllIn:
 		allInAmount := player.Stack
