@@ -105,11 +105,14 @@ func (p *Pot) Award(winners map[string]struct{}) map[string]int {
 	return result
 }
 
-// Total returns the sum of all closed pot amounts.
+// Total returns the sum of all closed pot amounts plus current bets.
 func (p *Pot) Total() int {
 	total := 0
 	for _, sp := range p.closedPots {
 		total += sp.amount
+	}
+	for _, bet := range p.bets {
+		total += bet
 	}
 	return total
 }
