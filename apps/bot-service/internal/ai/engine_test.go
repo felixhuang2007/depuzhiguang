@@ -15,13 +15,13 @@ func TestEngine_Decide_FoldWeakHand(t *testing.T) {
 func TestEngine_Decide_CallWithStrongHand(t *testing.T) {
 	engine := NewEngine(Regular, "BTN")
 	// AA facing a bet should always call or raise
-	decision := engine.Decide([]string{"AA"}, nil, 100, 20, 1000, 40)
+	decision := engine.Decide([]string{"AH", "AD"}, nil, 100, 20, 1000, 40)
 	assert.Contains(t, []string{"call", "raise"}, decision.Action)
 }
 
 func TestEngine_Decide_BetStrongHand(t *testing.T) {
 	engine := NewEngine(Shark, "CO")
 	// AA with no bet should bet or check (strength = 0.6, threshold is > 0.6)
-	decision := engine.Decide([]string{"AA"}, nil, 100, 0, 1000, 20)
+	decision := engine.Decide([]string{"AH", "AD"}, nil, 100, 0, 1000, 20)
 	assert.Contains(t, []string{"bet", "check"}, decision.Action)
 }

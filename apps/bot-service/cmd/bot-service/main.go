@@ -3,7 +3,6 @@ package main
 import (
 	"flag"
 	"fmt"
-	"log"
 	"os"
 	"os/signal"
 	"syscall"
@@ -13,10 +12,11 @@ import (
 
 func main() {
 	count := flag.Int("count", 100, "Number of bots")
+	wsURL := flag.String("ws", "ws://localhost:8080/ws", "Game server WebSocket URL")
 	flag.Parse()
 
 	fmt.Printf("Bot Service starting with %d bots\n", *count)
-	m := manager.NewManager()
+	m := manager.NewManager(*wsURL)
 	m.Spawn(*count)
 	fmt.Printf("Spawned %d bots\n", *count)
 

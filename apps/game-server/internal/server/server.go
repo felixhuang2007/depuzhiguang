@@ -7,6 +7,7 @@ import (
 	"net/http"
 	"time"
 
+	"github.com/depuzhiguang/game-server/internal/table"
 	"github.com/gorilla/websocket"
 )
 
@@ -21,16 +22,19 @@ var upgrader = websocket.Upgrader{
 // Server wraps the HTTP server and WebSocket hub
 type Server struct {
 	hub    *Hub
+	tm     *TableManager
 	server *http.Server
 }
 
 // NewServer creates a new game server
 func NewServer(addr string) *Server {
 	hub := NewHub()
+	tm := NewTableManager(hub)
 	mux := http.NewServeMux()
 
 	s := &Server{
 		hub: hub,
+		tm:  tm,
 		server: &http.Server{
 			Addr:    addr,
 			Handler: mux,
@@ -39,6 +43,19 @@ func NewServer(addr string) *Server {
 
 	mux.HandleFunc("/health", s.healthHandler)
 	mux.HandleFunc("/ws", s.wsHandler)
+
+	// Create a default test table
+	_, _ = tm.CreateTable(table.TableConfig{
+		ID:          "default-6max",
+		Name:        "Default 6-Max",
+		MaxSeats:    6,
+		SmallBlind:  5,
+		BigBlind:    10,
+		MinBuyIn:    50,
+		MaxBuyIn:    200,
+		RakePercent: 0.05,
+		RakeCap:     3,
+	})
 
 	return s
 }
@@ -98,9 +115,97 @@ func (s *Server) wsHandler(w http.ResponseWriter, r *http.Request) {
 			continue
 		}
 
-		// TODO: Route message to game logic
-		log.Printf("Received %s from %s", msg.Type, playerID)
+		// Route message to game logic
+		switch msg.Type {
+		case MsgJoinTable:
+			payload, ok := msg.Payload.(map[string]interface{})
+			if !ok {
+				_ = conn.WriteJSON(Message{Type: MsgError, Payload: ErrorPayload{Code: "bad_request", Message: "invalid join payload"}})
+				continue
+			}
+			join := JoinTablePayload{
+				TableID:  getString(payload, "table_id"),
+				PlayerID: playerID,
+				Token:    getString(payload, "token"),
+			}
+			if err := s.tm.HandleJoin(join); err != nil {
+				_ = conn.WriteJSON(Message{Type: MsgError, Payload: ErrorPayload{Code: "join_failed", Message: err.Error()}})
+			}
+
+		case MsgLeaveTable:
+			payload, ok := msg.Payload.(map[string]interface{})
+			if !ok {
+				continue
+			}
+			leave := LeaveTablePayload{
+				TableID:  getString(payload, "table_id"),
+				PlayerID: playerID,
+			}
+			_ = s.tm.HandleLeave(leave)
+
+		case MsgAction:
+			payload, ok := msg.Payload.(map[string]interface{})
+			if !ok {
+				_ = conn.WriteJSON(Message{Type: MsgError, Payload: ErrorPayload{Code: "bad_request", Message: "invalid action payload"}})
+				continue
+			}
+			action := ActionPayload{
+				TableID:  getString(payload, "table_id"),
+				PlayerID: playerID,
+				Amount:   getInt(payload, "amount"),
+			}
+			// Parse action type from string
+			action.Action = parseActionType(getString(payload, "action"))
+			if err := s.tm.HandleAction(action); err != nil {
+				_ = conn.WriteJSON(Message{Type: MsgError, Payload: ErrorPayload{Code: "action_failed", Message: err.Error()}})
+			}
+
+		default:
+			log.Printf("Received %s from %s", msg.Type, playerID)
+		}
 	}
 
 	log.Printf("Player %s disconnected", playerID)
+}
+
+func getString(m map[string]interface{}, key string) string {
+	if v, ok := m[key]; ok {
+		if s, ok := v.(string); ok {
+			return s
+		}
+	}
+	return ""
+}
+
+func getInt(m map[string]interface{}, key string) int {
+	if v, ok := m[key]; ok {
+		switch n := v.(type) {
+		case float64:
+			return int(n)
+		case int:
+			return n
+		case int64:
+			return int(n)
+		}
+	}
+	return 0
+}
+
+func parseActionType(s string) table.ActionType {
+	switch s {
+	case "fold":
+		return table.ActionFold
+	case "check":
+		return table.ActionCheck
+	case "call":
+		return table.ActionCall
+	case "bet":
+		return table.ActionBet
+	case "raise":
+		return table.ActionRaise
+	case "all_in":
+		return table.ActionAllIn
+	default:
+		return table.ActionFold
+	}
 }

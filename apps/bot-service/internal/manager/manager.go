@@ -4,9 +4,9 @@ import (
 	"context"
 	"fmt"
 	"sync"
-	"time"
 
 	"github.com/depuzhiguang/bot-service/internal/ai"
+	"github.com/depuzhiguang/bot-service/internal/client"
 	"github.com/depuzhiguang/bot-service/internal/identity"
 )
 
@@ -15,6 +15,7 @@ type Bot struct {
 	Engine  *ai.Engine
 	TableID string
 	Status  string
+	client  *client.GameClient
 	ctx     context.Context
 	cancel  context.CancelFunc
 }
@@ -23,12 +24,14 @@ type Manager struct {
 	bots   map[string]*Bot
 	mu     sync.RWMutex
 	tables map[string][]string
+	wsURL  string
 }
 
-func NewManager() *Manager {
+func NewManager(wsURL string) *Manager {
 	return &Manager{
 		bots:   make(map[string]*Bot),
 		tables: make(map[string][]string),
+		wsURL:  wsURL,
 	}
 }
 
@@ -65,19 +68,22 @@ func (m *Manager) AssignToTable(botID, tableID string) error {
 	bot.TableID = tableID
 	bot.Status = "playing"
 	m.tables[tableID] = append(m.tables[tableID], botID)
+
+	// Create and connect WebSocket client
+	gc := client.NewGameClient(m.wsURL, bot.Profile.ID, tableID, bot.Engine)
+	bot.client = gc
+	if err := gc.Connect(); err != nil {
+		bot.Status = "error"
+		return fmt.Errorf("bot connect failed: %w", err)
+	}
+
 	go m.runBot(bot)
 	return nil
 }
 
 func (m *Manager) runBot(bot *Bot) {
-	ticker := time.NewTicker(5 * time.Second)
-	defer ticker.Stop()
-	for {
-		select {
-		case <-bot.ctx.Done():
-			return
-		case <-ticker.C:
-		}
+	if bot.client != nil {
+		bot.client.Run()
 	}
 }
 
@@ -85,6 +91,9 @@ func (m *Manager) StopAll() {
 	m.mu.Lock()
 	defer m.mu.Unlock()
 	for _, bot := range m.bots {
+		if bot.client != nil {
+			bot.client.Stop()
+		}
 		bot.cancel()
 	}
 	m.bots = make(map[string]*Bot)
