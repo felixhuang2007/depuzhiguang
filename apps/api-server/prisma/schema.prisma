@@ -37,6 +37,8 @@ model User {
   chatMessages  ChatMessage[]
   sentFriendRequests     Friend[] @relation("UserFriends")
   receivedFriendRequests Friend[] @relation("FriendUsers")
+  simActions             SimAction[]
+  simLeaderboards        SimLeaderboard[]
 
   @@map("users")
 }
@@ -159,6 +161,7 @@ model SimAction {
   id          String   @id @default(uuid())
   sessionId   String   @map("session_id")
   userId      String   @map("user_id")
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
   tableId     String   @map("table_id")
   handNumber  Int      @map("hand_number")
   phase       String
@@ -170,7 +173,7 @@ model SimAction {
   stackAfter  Int      @map("stack_after")
   holeCards   String?  @map("hole_cards")
   community   String?  @map("community")
-  timestamp   DateTime @default(now())
+  timestamp   DateTime @default(now()) @map("timestamp")
 
   @@index([userId, timestamp])
   @@index([sessionId, timestamp])
@@ -180,6 +183,7 @@ model SimAction {
 model SimLeaderboard {
   id        String   @id @default(uuid())
   userId    String   @map("user_id")
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
   username  String
   metric    String
   rank      Int
