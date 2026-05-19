@@ -1,0 +1,48 @@
+import { Router } from 'express';
+import { z } from 'zod';
+import { register, login, refresh } from '../services/auth';
+
+const router = Router();
+
+const registerSchema = z.object({
+  username: z.string().min(3).max(30),
+  email: z.string().email(),
+  password: z.string().min(6),
+});
+
+const loginSchema = z.object({
+  username: z.string(),
+  password: z.string(),
+});
+
+router.post('/register', async (req, res, next) => {
+  try {
+    const data = registerSchema.parse(req.body);
+    const user = await register(data.username, data.email, data.password);
+    res.status(201).json(user);
+  } catch (err) {
+    next(err);
+  }
+});
+
+router.post('/login', async (req, res, next) => {
+  try {
+    const data = loginSchema.parse(req.body);
+    const result = await login(data.username, data.password);
+    res.json(result);
+  } catch (err) {
+    next(err);
+  }
+});
+
+router.post('/refresh', async (req, res, next) => {
+  try {
+    const { refreshToken } = req.body;
+    const result = await refresh(refreshToken);
+    res.json(result);
+  } catch (err) {
+    next(err);
+  }
+});
+
+export default router;

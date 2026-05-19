@@ -3,7 +3,7 @@ generator client {
 }
 
 datasource db {
-  provider = "postgresql"
+  provider = "sqlite"
   url      = env("DATABASE_URL")
 }
 
@@ -94,7 +94,7 @@ model HandHistory {
   id        String   @id @default(uuid())
   userId    String   @map("user_id")
   tableId   String   @map("table_id")
-  handData  Json     @map("hand_data")
+  handData  String   @map("hand_data")
   result    String
   wonAmount Int      @default(0) @map("won_amount")
   playedAt  DateTime @default(now()) @map("played_at")
