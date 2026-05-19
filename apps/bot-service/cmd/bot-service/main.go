@@ -20,6 +20,20 @@ func main() {
 	m.Spawn(*count)
 	fmt.Printf("Spawned %d bots\n", *count)
 
+	// Assign bots to default table
+	assigned := 0
+	for _, id := range m.BotIDs() {
+		if err := m.AssignToTable(id, "default-6max"); err != nil {
+			fmt.Printf("Failed to assign bot %s: %v\n", id, err)
+		} else {
+			assigned++
+			if assigned >= 6 {
+				break // fill one 6-max table for testing
+			}
+		}
+	}
+	fmt.Printf("Assigned %d bots to table\n", assigned)
+
 	sigCh := make(chan os.Signal, 1)
 	signal.Notify(sigCh, syscall.SIGINT, syscall.SIGTERM)
 	<-sigCh

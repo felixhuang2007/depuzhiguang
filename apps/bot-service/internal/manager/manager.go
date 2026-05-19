@@ -100,6 +100,16 @@ func (m *Manager) StopAll() {
 	m.tables = make(map[string][]string)
 }
 
+func (m *Manager) BotIDs() []string {
+	m.mu.RLock()
+	defer m.mu.RUnlock()
+	ids := make([]string, 0, len(m.bots))
+	for id := range m.bots {
+		ids = append(ids, id)
+	}
+	return ids
+}
+
 func (m *Manager) Stats() map[string]interface{} {
 	m.mu.RLock()
 	defer m.mu.RUnlock()
