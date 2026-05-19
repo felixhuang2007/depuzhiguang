@@ -146,7 +146,7 @@ func (g *Game) ProcessAction(action Action) error {
 	switch action.Type {
 	case ActionFold:
 		player.Status = Folded
-		g.Pot.AddBet(player.ID, 0)
+		// Folded player's existing bets remain in the pot
 
 	case ActionCheck:
 		if player.Bet < g.highestBet {
@@ -164,7 +164,7 @@ func (g *Game) ProcessAction(action Action) error {
 		player.Stack -= callAmount
 		player.Bet += callAmount
 		player.TotalBet += callAmount
-		g.Pot.AddBet(player.ID, player.Bet)
+		g.Pot.AddBet(player.ID, callAmount)
 
 	case ActionBet, ActionRaise:
 		if action.Amount <= 0 {
@@ -194,7 +194,7 @@ func (g *Game) ProcessAction(action Action) error {
 			player.Stack = 0
 			player.Bet += allInAmount
 			player.TotalBet += allInAmount
-			g.Pot.AddBet(player.ID, player.Bet)
+			g.Pot.AddBet(player.ID, allInAmount)
 			if player.Bet > g.highestBet {
 				raiseSize := player.Bet - g.highestBet
 				g.LastRaise = raiseSize
@@ -207,7 +207,7 @@ func (g *Game) ProcessAction(action Action) error {
 			player.Stack -= additional
 			player.Bet = action.Amount
 			player.TotalBet += additional
-			g.Pot.AddBet(player.ID, player.Bet)
+			g.Pot.AddBet(player.ID, additional)
 			raiseSize := action.Amount - g.highestBet
 			g.LastRaise = raiseSize
 			g.highestBet = action.Amount
@@ -219,7 +219,7 @@ func (g *Game) ProcessAction(action Action) error {
 		player.Stack = 0
 		player.Bet += allInAmount
 		player.TotalBet += allInAmount
-		g.Pot.AddBet(player.ID, player.Bet)
+		g.Pot.AddBet(player.ID, allInAmount)
 		if player.Bet > g.highestBet {
 			g.highestBet = player.Bet
 			g.LastAggressor = g.CurrentTurn
