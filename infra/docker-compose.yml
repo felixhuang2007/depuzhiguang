@@ -3,56 +3,90 @@ version: '3.8'
 services:
   postgres:
     image: postgres:16-alpine
+    container_name: depg-postgres
     environment:
       POSTGRES_USER: depg
       POSTGRES_PASSWORD: depg_pass
       POSTGRES_DB: depg_db
     ports:
-      - "5432:5432"
+      - "127.0.0.1:5432:5432"
     volumes:
       - pgdata:/var/lib/postgresql/data
+    deploy:
+      resources:
+        limits:
+          memory: 512M
+    restart: unless-stopped
 
   redis:
     image: redis:7-alpine
+    container_name: depg-redis
     ports:
-      - "6379:6379"
+      - "127.0.0.1:6379:6379"
+    deploy:
+      resources:
+        limits:
+          memory: 128M
+    restart: unless-stopped
 
   api-server:
     build:
       context: ../apps/api-server
       dockerfile: Dockerfile
+    container_name: depg-api
     ports:
       - "3000:3000"
     environment:
       DATABASE_URL: postgresql://depg:depg_pass@postgres:5432/depg_db
-      JWT_SECRET: change-me-in-production
+      JWT_SECRET: ${JWT_SECRET:-change-me-in-production}
+      JWT_REFRESH_SECRET: ${JWT_REFRESH_SECRET:-change-me-too}
+      JWT_ACCESS_EXPIRY: 15m
+      JWT_REFRESH_EXPIRY: 7d
       NODE_ENV: production
+      PORT: 3000
+      API_BASE_URL: ${API_BASE_URL:-http://localhost:3000}
+      KBZPAY_MERCHANT_ID: ${KBZPAY_MERCHANT_ID:-}
+      KBZPAY_SECRET: ${KBZPAY_SECRET:-}
     depends_on:
       - postgres
       - redis
+    deploy:
+      resources:
+        limits:
+          memory: 512M
+    restart: unless-stopped
 
   game-server:
     build:
       context: ../apps/game-server
       dockerfile: Dockerfile
+    container_name: depg-game
     ports:
       - "8080:8080"
     environment:
+      PORT: 8080
       API_BASE_URL: http://api-server:3000
-      REDIS_URL: redis:6379
-    depends_on:
-      - api-server
-      - redis
+    deploy:
+      resources:
+        limits:
+          memory: 256M
+    restart: unless-stopped
 
   bot-service:
     build:
       context: ../apps/bot-service
       dockerfile: Dockerfile
+    container_name: depg-bot
     environment:
       GAME_SERVER_WS: ws://game-server:8080/ws
-      BOT_COUNT: 200
+      BOT_COUNT: ${BOT_COUNT:-20}
     depends_on:
       - game-server
+    deploy:
+      resources:
+        limits:
+          memory: 512M
+    restart: unless-stopped
 
 volumes:
   pgdata:
