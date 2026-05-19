@@ -1,0 +1,40 @@
+syntax = "proto3";
+package bot;
+option go_package = "github.com/depuzhiguang/bot-service/proto";
+
+service BotGame {
+  rpc JoinTable(JoinRequest) returns (JoinResponse);
+  rpc SendAction(ActionRequest) returns (ActionResponse);
+  rpc StreamState(StateStreamRequest) returns (stream StateUpdate);
+}
+
+message JoinRequest {
+  string table_id = 1;
+  string player_id = 2;
+}
+
+message JoinResponse {
+  bool success = 1;
+  string message = 2;
+}
+
+message ActionRequest {
+  string table_id = 1;
+  string player_id = 2;
+  string action_type = 3;
+  int32 amount = 4;
+}
+
+message ActionResponse {
+  bool accepted = 1;
+}
+
+message StateStreamRequest {
+  string table_id = 1;
+  string player_id = 2;
+}
+
+message StateUpdate {
+  string state_type = 1;
+  bytes payload = 2;
+}
