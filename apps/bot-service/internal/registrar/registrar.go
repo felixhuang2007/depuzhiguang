@@ -2,9 +2,10 @@ package registrar
 
 import (
 	"bytes"
+	"crypto/rand"
 	"encoding/json"
 	"fmt"
-	"math/rand"
+	"math/big"
 	"net/http"
 	"time"
 )
@@ -14,8 +15,8 @@ type SimProfile struct {
 	Email       string `json:"email"`
 	Password    string `json:"password"`
 	Nickname    string `json:"nickname"`
-	Style       string
-	InitialGold int
+	Style       string `json:"style"`
+	InitialGold int    `json:"initialGold"`
 }
 
 type Registrar struct {
@@ -30,13 +31,24 @@ func NewRegistrar(apiBaseURL string) *Registrar {
 	}
 }
 
+func generateSecurePassword() string {
+	const charset = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789!@#$%"
+	length := 12
+	b := make([]byte, length)
+	for i := range b {
+		n, _ := rand.Int(rand.Reader, big.NewInt(int64(len(charset))))
+		b[i] = charset[n.Int64()]
+	}
+	return "Sim" + string(b)
+}
+
 func GenerateProfile(index int, style string) SimProfile {
 	firstNames := []string{"Tom", "Lily", "Jack", "Rose", "Alex", "Mia", "Leo", "Zoe", "Max", "Eva", "Sam", "Amy", "Ben", "Sara", "Dan", "Kim", "Ray", "Joy", "Jay", "Ann"}
 	fn := firstNames[index%len(firstNames)]
 	return SimProfile{
 		Username:    fmt.Sprintf("sim_%s_%d", fn, index),
 		Email:       fmt.Sprintf("sim_%s_%d@test.com", fn, index),
-		Password:    fmt.Sprintf("SimPass%d!", rand.Intn(9000)+1000),
+		Password:    generateSecurePassword(),
 		Nickname:    fmt.Sprintf("%s the %s", fn, style),
 		Style:       style,
 		InitialGold: 10000,
@@ -44,12 +56,15 @@ func GenerateProfile(index int, style string) SimProfile {
 }
 
 func (r *Registrar) RegisterUser(profile SimProfile) (string, error) {
-	payload, _ := json.Marshal(map[string]interface{}{
+	payload, err := json.Marshal(map[string]interface{}{
 		"username": profile.Username,
 		"email":    profile.Email,
 		"password": profile.Password,
 		"nickname": profile.Nickname,
 	})
+	if err != nil {
+		return "", fmt.Errorf("marshal payload: %w", err)
+	}
 
 	resp, err := r.client.Post(r.apiBaseURL+"/api/auth/register", "application/json", bytes.NewReader(payload))
 	if err != nil {
@@ -57,9 +72,11 @@ func (r *Registrar) RegisterUser(profile SimProfile) (string, error) {
 	}
 	defer resp.Body.Close()
 
-	if resp.StatusCode != http.StatusCreated && resp.StatusCode != http.StatusOK {
-		// User may already exist, try login
+	if resp.StatusCode == http.StatusConflict {
 		return r.loginUser(profile)
+	}
+	if resp.StatusCode != http.StatusCreated && resp.StatusCode != http.StatusOK {
+		return "", fmt.Errorf("register returned status %d", resp.StatusCode)
 	}
 
 	var result struct {
@@ -72,16 +89,23 @@ func (r *Registrar) RegisterUser(profile SimProfile) (string, error) {
 }
 
 func (r *Registrar) loginUser(profile SimProfile) (string, error) {
-	payload, _ := json.Marshal(map[string]interface{}{
+	payload, err := json.Marshal(map[string]interface{}{
 		"username": profile.Username,
 		"password": profile.Password,
 	})
+	if err != nil {
+		return "", fmt.Errorf("marshal payload: %w", err)
+	}
 
 	resp, err := r.client.Post(r.apiBaseURL+"/api/auth/login", "application/json", bytes.NewReader(payload))
 	if err != nil {
 		return "", fmt.Errorf("login request failed: %w", err)
 	}
 	defer resp.Body.Close()
+
+	if resp.StatusCode != http.StatusOK {
+		return "", fmt.Errorf("login returned status %d", resp.StatusCode)
+	}
 
 	var result struct {
 		AccessToken string `json:"accessToken"`
