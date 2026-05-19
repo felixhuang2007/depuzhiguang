@@ -29,14 +29,14 @@ func TestEngine_Decide_BetStrongHand(t *testing.T) {
 func TestEngine_PersonaDrivenDecision(t *testing.T) {
 	// Maniac should almost never fold preflop with premium hand
 	maniac := NewEngineWithPersona(GetPersona("maniac"), "BTN")
-	hole := []string{"Ah", "Kd"}
+	hole := []string{"AH", "KD"}
 	community := []string{}
 	decision := maniac.Decide(hole, community, 100, 10, 1000, 20)
 	assert.NotEqual(t, "fold", decision.Action, "maniac should not fold premium hand")
 
 	// Nit should fold weak hands
 	nit := NewEngineWithPersona(GetPersona("nit"), "UTG")
-	holeWeak := []string{"7h", "2d"}
+	holeWeak := []string{"7H", "2D"}
 	decision = nit.Decide(holeWeak, community, 100, 10, 1000, 20)
 	assert.Equal(t, "fold", decision.Action, "nit should fold weak hand")
 }

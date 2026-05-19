@@ -3,6 +3,7 @@ package ai
 import (
 	"math"
 	"math/rand"
+	"strings"
 	"time"
 )
 
@@ -38,7 +39,28 @@ func NewEngineWithPersona(p Persona, pos string) *Engine {
 }
 
 func NewEngine(diff Difficulty, pos string) *Engine {
-	return NewEngineWithPersona(GetPersona("regular"), pos)
+	var style string
+	switch diff {
+	case Fish:
+		style = "loose_passive"
+	case Shark:
+		style = "tight_aggressive"
+	case Whale:
+		style = "rock"
+	default:
+		style = "regular"
+	}
+	return NewEngineWithPersona(GetPersona(style), pos)
+}
+
+func (e *Engine) RecordResult(won bool) {
+	e.handsPlayed++
+	if won {
+		e.handsWon++
+		e.consecutiveLosses = 0
+	} else {
+		e.consecutiveLosses++
+	}
 }
 
 func (e *Engine) Decide(hole []string, community []string, pot int, toCall int, stack int, minRaise int) Decision {
@@ -95,7 +117,7 @@ func (e *Engine) evaluateHandStrength(hole, community []string) float64 {
 	highCards := map[string]float64{"A": 0.15, "K": 0.12, "Q": 0.10, "J": 0.08, "T": 0.06}
 	for _, card := range hole {
 		if len(card) > 0 {
-			rank := string(card[0])
+			rank := strings.ToUpper(string(card[0]))
 			if v, ok := highCards[rank]; ok {
 				score += v
 			}
