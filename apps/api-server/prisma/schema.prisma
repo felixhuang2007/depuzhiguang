@@ -25,6 +25,10 @@ model User {
   vpip        Int @default(0)
   pfr         Int @default(0)
 
+  isSimUser      Boolean  @default(false) @map("is_sim_user")
+  simStyle       String?  @map("sim_style")
+  simPersonality String?  @map("sim_personality")
+
   ownedClubs    Club[]        @relation("ClubOwner")
   clubMembers   ClubMember[]
   refreshTokens RefreshToken[]
@@ -149,4 +153,52 @@ model Transaction {
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@map("transactions")
+}
+
+model SimAction {
+  id          String   @id @default(uuid())
+  sessionId   String   @map("session_id")
+  userId      String   @map("user_id")
+  tableId     String   @map("table_id")
+  handNumber  Int      @map("hand_number")
+  phase       String
+  action      String
+  amount      Int      @default(0)
+  potBefore   Int      @map("pot_before")
+  potAfter    Int      @map("pot_after")
+  stackBefore Int      @map("stack_before")
+  stackAfter  Int      @map("stack_after")
+  holeCards   String?  @map("hole_cards")
+  community   String?  @map("community")
+  timestamp   DateTime @default(now())
+
+  @@index([userId, timestamp])
+  @@index([sessionId, timestamp])
+  @@map("sim_actions")
+}
+
+model SimLeaderboard {
+  id        String   @id @default(uuid())
+  userId    String   @map("user_id")
+  username  String
+  metric    String
+  rank      Int
+  value     Float
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  @@unique([metric, userId])
+  @@index([metric, rank])
+  @@map("sim_leaderboards")
+}
+
+model SimAnomaly {
+  id          String   @id @default(uuid())
+  type        String
+  severity    String
+  description String
+  data        String
+  detectedAt  DateTime @default(now()) @map("detected_at")
+
+  @@index([type, detectedAt])
+  @@map("sim_anomalies")
 }
