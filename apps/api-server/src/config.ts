@@ -8,6 +8,9 @@ const envSchema = z.object({
   JWT_REFRESH_SECRET: z.string().min(32).default('change-me-too-in-production-32-chars'),
   JWT_ACCESS_EXPIRY: z.string().default('15m'),
   JWT_REFRESH_EXPIRY: z.string().default('7d'),
+  API_BASE_URL: z.string().optional(),
+  KBZPAY_MERCHANT_ID: z.string().optional(),
+  KBZPAY_SECRET: z.string().optional(),
 });
 
 export const config = envSchema.parse(process.env);

@@ -30,13 +30,13 @@ export async function login(username: string, password: string) {
     throw new Error('Invalid credentials');
   }
 
-  const accessToken = jwt.sign({ userId: user.id }, config.JWT_SECRET, {
+  const accessToken = jwt.sign({ userId: user.id }, config.JWT_SECRET as jwt.Secret, {
     expiresIn: config.JWT_ACCESS_EXPIRY,
-  });
+  } as jwt.SignOptions);
 
-  const refreshToken = jwt.sign({ userId: user.id }, config.JWT_REFRESH_SECRET, {
+  const refreshToken = jwt.sign({ userId: user.id }, config.JWT_REFRESH_SECRET as jwt.Secret, {
     expiresIn: config.JWT_REFRESH_EXPIRY,
-  });
+  } as jwt.SignOptions);
 
   await prisma.refreshToken.create({
     data: {
@@ -57,9 +57,9 @@ export async function refresh(token: string) {
 
   const payload = jwt.verify(token, config.JWT_REFRESH_SECRET) as { userId: string };
 
-  const accessToken = jwt.sign({ userId: payload.userId }, config.JWT_SECRET, {
+  const accessToken = jwt.sign({ userId: payload.userId }, config.JWT_SECRET as jwt.Secret, {
     expiresIn: config.JWT_ACCESS_EXPIRY,
-  });
+  } as jwt.SignOptions);
 
   return { accessToken };
 }

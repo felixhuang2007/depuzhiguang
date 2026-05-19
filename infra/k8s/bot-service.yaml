@@ -1,0 +1,23 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: bot-service
+  namespace: depg
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: bot-service
+  template:
+    metadata:
+      labels:
+        app: bot-service
+    spec:
+      containers:
+        - name: bot-service
+          image: depg/bot-service:latest
+          env:
+            - name: GAME_SERVER_WS
+              value: ws://game-server:8080/ws
+            - name: BOT_COUNT
+              value: "250"

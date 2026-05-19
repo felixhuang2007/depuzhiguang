@@ -141,6 +141,8 @@ model Transaction {
   type        String
   amount      Int
   currency    String
+  status      String   @default("pending")
+  externalRef String?  @map("external_ref")
   description String?
   createdAt   DateTime @default(now()) @map("created_at")
 
