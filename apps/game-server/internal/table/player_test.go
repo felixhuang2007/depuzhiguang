@@ -27,6 +27,9 @@ func TestPlayer_IsActive(t *testing.T) {
 
 func TestPlayer_IsInHand(t *testing.T) {
 	p := NewPlayer("p1", 0, 100)
+	assert.False(t, p.IsInHand()) // Waiting is not in hand
+
+	p.Status = Active
 	assert.True(t, p.IsInHand())
 
 	p.Status = Folded

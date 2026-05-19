@@ -187,7 +187,7 @@ func (c *GameClient) handleStateSnapshot(raw json.RawMessage) {
 		return
 	}
 
-	// Check if it's our turn
+	// Check if it's our turn and we can act
 	var mySeat, myStack, toCall, currentBet, minRaise int
 	var myHole []string
 	var community []string
@@ -196,6 +196,10 @@ func (c *GameClient) handleStateSnapshot(raw json.RawMessage) {
 			mySeat = p.Seat
 			myStack = p.Stack
 			currentBet = p.Bet
+			// Only act if status is Active (1)
+			if p.Status != 1 {
+				return
+			}
 			for _, card := range p.HoleCards {
 				myHole = append(myHole, cardToString(card))
 			}

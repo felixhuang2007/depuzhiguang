@@ -94,6 +94,17 @@ func (s *Server) wsHandler(w http.ResponseWriter, r *http.Request) {
 	s.hub.Register(playerID, conn)
 	defer s.hub.Unregister(playerID)
 
+	// Track joined tables for cleanup on disconnect
+	joinedTables := make(map[string]struct{})
+	defer func() {
+		for tableID := range joinedTables {
+			_ = s.tm.HandleLeave(LeaveTablePayload{
+				TableID:  tableID,
+				PlayerID: playerID,
+			})
+		}
+	}()
+
 	log.Printf("Player %s connected", playerID)
 
 	// Send welcome message
@@ -130,6 +141,8 @@ func (s *Server) wsHandler(w http.ResponseWriter, r *http.Request) {
 			}
 			if err := s.tm.HandleJoin(join); err != nil {
 				_ = conn.WriteJSON(Message{Type: MsgError, Payload: ErrorPayload{Code: "join_failed", Message: err.Error()}})
+			} else {
+				joinedTables[join.TableID] = struct{}{}
 			}
 
 		case MsgLeaveTable:
@@ -141,7 +154,9 @@ func (s *Server) wsHandler(w http.ResponseWriter, r *http.Request) {
 				TableID:  getString(payload, "table_id"),
 				PlayerID: playerID,
 			}
-			_ = s.tm.HandleLeave(leave)
+			if err := s.tm.HandleLeave(leave); err == nil {
+				delete(joinedTables, leave.TableID)
+			}
 
 		case MsgAction:
 			payload, ok := msg.Payload.(map[string]interface{})

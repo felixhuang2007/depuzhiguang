@@ -15,7 +15,12 @@ func main() {
 	wsURL := flag.String("ws", "ws://localhost:8080/ws", "Game server WebSocket URL")
 	flag.Parse()
 
-	fmt.Printf("Bot Service starting with %d bots\n", *count)
+	// Allow environment variable to override default
+	if envURL := os.Getenv("GAME_SERVER_WS"); envURL != "" {
+		*wsURL = envURL
+	}
+
+	fmt.Printf("Bot Service starting with %d bots, WS URL: %s\n", *count, *wsURL)
 	m := manager.NewManager(*wsURL)
 	m.Spawn(*count)
 	fmt.Printf("Spawned %d bots\n", *count)

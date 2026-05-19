@@ -60,7 +60,7 @@ func (p *Player) IsActive() bool {
 
 // IsInHand returns true if player hasn't folded
 func (p *Player) IsInHand() bool {
-	return p.Status == Active || p.Status == AllIn || p.Status == Waiting
+	return p.Status == Active || p.Status == AllIn
 }
 
 // ResetForNewHand clears hand-specific state
