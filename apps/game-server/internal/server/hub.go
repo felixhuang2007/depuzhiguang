@@ -12,7 +12,9 @@ type Hub struct {
 	connections map[string]*websocket.Conn
 	// tablePlayers maps tableID to set of connected playerIDs
 	tablePlayers map[string]map[string]struct{}
-	mu           sync.RWMutex
+	// observers maps tableID to set of observing playerIDs
+	observers map[string]map[string]struct{}
+	mu        sync.RWMutex
 }
 
 // NewHub creates a new connection hub
@@ -20,6 +22,7 @@ func NewHub() *Hub {
 	return &Hub{
 		connections:  make(map[string]*websocket.Conn),
 		tablePlayers: make(map[string]map[string]struct{}),
+		observers:    make(map[string]map[string]struct{}),
 	}
 }
 
@@ -42,6 +45,13 @@ func (h *Hub) Unregister(playerID string) {
 			delete(h.tablePlayers, tableID)
 		}
 	}
+	// Remove from all observers
+	for tableID, obs := range h.observers {
+		delete(obs, playerID)
+		if len(obs) == 0 {
+			delete(h.observers, tableID)
+		}
+	}
 }
 
 // JoinTable registers a player to a table's broadcast group
@@ -62,6 +72,45 @@ func (h *Hub) LeaveTable(playerID, tableID string) {
 		delete(players, playerID)
 		if len(players) == 0 {
 			delete(h.tablePlayers, tableID)
+		}
+	}
+}
+
+// JoinAsObserver registers a player as an observer of a table
+func (h *Hub) JoinAsObserver(playerID, tableID string) {
+	h.mu.Lock()
+	defer h.mu.Unlock()
+	if h.observers[tableID] == nil {
+		h.observers[tableID] = make(map[string]struct{})
+	}
+	h.observers[tableID][playerID] = struct{}{}
+}
+
+// LeaveAsObserver removes a player from observers
+func (h *Hub) LeaveAsObserver(playerID, tableID string) {
+	h.mu.Lock()
+	defer h.mu.Unlock()
+	if obs := h.observers[tableID]; obs != nil {
+		delete(obs, playerID)
+		if len(obs) == 0 {
+			delete(h.observers, tableID)
+		}
+	}
+}
+
+// BroadcastToObservers sends a message to all observers of a table
+func (h *Hub) BroadcastToObservers(tableID string, msg Message) {
+	h.mu.RLock()
+	obs := h.observers[tableID]
+	conns := make(map[string]*websocket.Conn, len(obs))
+	for pid := range obs {
+		conns[pid] = h.connections[pid]
+	}
+	h.mu.RUnlock()
+
+	for _, conn := range conns {
+		if conn != nil {
+			_ = conn.WriteJSON(msg)
 		}
 	}
 }
