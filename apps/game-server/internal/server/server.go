@@ -156,7 +156,9 @@ func (s *Server) wsHandler(w http.ResponseWriter, r *http.Request) {
 			}
 			// Parse action type from string
 			action.Action = parseActionType(getString(payload, "action"))
+			log.Printf("Action from %s: %s %d", playerID, getString(payload, "action"), action.Amount)
 			if err := s.tm.HandleAction(action); err != nil {
+				log.Printf("Action failed for %s: %v", playerID, err)
 				_ = conn.WriteJSON(Message{Type: MsgError, Payload: ErrorPayload{Code: "action_failed", Message: err.Error()}})
 			}
 

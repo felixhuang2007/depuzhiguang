@@ -45,7 +45,7 @@ type ActionPayload struct {
 // StateSnapshotPayload represents full table state.
 type StateSnapshotPayload struct {
 	TableID     string        `json:"table_id"`
-	State       string        `json:"state"`
+	State       int           `json:"state"`
 	Community   []CardJSON    `json:"community"`
 	Players     []PlayerState `json:"players"`
 	Pot         int           `json:"pot"`
@@ -64,7 +64,7 @@ type PlayerState struct {
 	ID        string     `json:"id"`
 	Seat      int        `json:"seat"`
 	Stack     int        `json:"stack"`
-	Status    string     `json:"status"`
+	Status    int        `json:"status"`
 	Bet       int        `json:"bet"`
 	HoleCards []CardJSON `json:"hole_cards,omitempty"`
 }

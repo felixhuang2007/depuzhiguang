@@ -83,8 +83,8 @@ func (r Rank) String() string {
 
 // Card is a playing card with suit and rank
 type Card struct {
-	suit Suit
-	rank Rank
+	Suit Suit `json:"suit"`
+	Rank Rank `json:"rank"`
 }
 
 // NewCard creates a new card. Validates inputs.
@@ -95,15 +95,13 @@ func NewCard(suit Suit, rank Rank) Card {
 	if rank < Two || rank > Ace {
 		rank = InvalidRank
 	}
-	return Card{suit: suit, rank: rank}
+	return Card{Suit: suit, Rank: rank}
 }
 
-func (c Card) Suit() Suit   { return c.suit }
-func (c Card) Rank() Rank   { return c.rank }
-func (c Card) String() string { return c.rank.String() + c.suit.String() }
+func (c Card) String() string { return c.Rank.String() + c.Suit.String() }
 
 // ToByte returns a compact byte representation for wire protocol
-func (c Card) ToByte() byte { return byte(c.suit)<<4 | byte(c.rank) }
+func (c Card) ToByte() byte { return byte(c.Suit)<<4 | byte(c.Rank) }
 
 // CardFromByte reconstructs a Card from a compact byte representation
 func CardFromByte(b byte) Card { return NewCard(Suit(b>>4), Rank(b&0x0F)) }

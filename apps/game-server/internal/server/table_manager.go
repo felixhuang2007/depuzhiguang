@@ -66,6 +66,7 @@ func (tm *TableManager) HandleJoin(payload JoinTablePayload) error {
 
 	t := entry.Table
 	seat := t.NextAvailableSeat()
+	log.Printf("HandleJoin: player=%s table=%s nextSeat=%d occupied=%d/%d", payload.PlayerID, payload.TableID, seat, t.PlayerCount(), t.Config.MaxSeats)
 	if seat < 0 {
 		return fmt.Errorf("table is full")
 	}
@@ -79,18 +80,19 @@ func (tm *TableManager) HandleJoin(payload JoinTablePayload) error {
 
 	tm.hub.JoinTable(payload.PlayerID, payload.TableID)
 
-	// Broadcast player joined
-	tm.hub.BroadcastToTable(payload.TableID, Message{
-		Type: MsgPlayerJoined,
-		Payload: PlayerEventPayload{
-			TableID:  payload.TableID,
-			PlayerID: payload.PlayerID,
-			Seat:     seat,
-		},
-	})
-
-	// Send state snapshot to joining player
-	tm.sendStateSnapshot(payload.PlayerID, entry)
+	go func() {
+		// Broadcast player joined (async to avoid blocking)
+		tm.hub.BroadcastToTable(payload.TableID, Message{
+			Type: MsgPlayerJoined,
+			Payload: PlayerEventPayload{
+				TableID:  payload.TableID,
+				PlayerID: payload.PlayerID,
+				Seat:     seat,
+			},
+		})
+		// Send state snapshot to joining player
+		tm.sendStateSnapshot(payload.PlayerID, entry)
+	}()
 
 	// Auto-start if enough players and no active game
 	if entry.Game == nil && t.PlayerCount() >= 2 {
@@ -100,7 +102,7 @@ func (tm *TableManager) HandleJoin(payload JoinTablePayload) error {
 			entry.Game = nil
 		} else {
 			log.Printf("Game started on table %s", payload.TableID)
-			tm.broadcastGameState(payload.TableID, entry)
+			go tm.broadcastGameState(payload.TableID, entry)
 		}
 	}
 

@@ -50,8 +50,8 @@ func evaluate5(cards []Card) (HandRank, EvalResult) {
 	ranks := make([]Rank, 5)
 	suits := make([]Suit, 5)
 	for i, c := range cards {
-		ranks[i] = c.Rank()
-		suits[i] = c.Suit()
+		ranks[i] = c.Rank
+		suits[i] = c.Suit
 	}
 	sort.Slice(ranks, func(i, j int) bool { return ranks[i] > ranks[j] })
 
