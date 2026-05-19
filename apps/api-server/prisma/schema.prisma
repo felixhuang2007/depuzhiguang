@@ -1,0 +1,119 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id        String   @id @default(uuid())
+  username  String   @unique
+  email     String   @unique
+  password  String
+  nickname  String?
+  avatar    String?
+  gold      Int      @default(0)
+  bb        Int      @default(0)
+  status    String   @default("active")
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  handsPlayed Int @default(0) @map("hands_played")
+  handsWon    Int @default(0) @map("hands_won")
+  vpip        Int @default(0)
+  pfr         Int @default(0)
+
+  ownedClubs    Club[]        @relation("ClubOwner")
+  clubMembers   ClubMember[]
+  refreshTokens RefreshToken[]
+  handHistories HandHistory[]
+  transactions  Transaction[]
+
+  @@map("users")
+}
+
+model RefreshToken {
+  id        String   @id @default(uuid())
+  token     String   @unique
+  userId    String   @map("user_id")
+  expiresAt DateTime @map("expires_at")
+  createdAt DateTime @default(now()) @map("created_at")
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("refresh_tokens")
+}
+
+model Club {
+  id          String  @id @default(uuid())
+  name        String
+  description String?
+  ownerId     String  @map("owner_id")
+  joinType    String  @default("approval") @map("join_type")
+  status      String  @default("active")
+  createdAt   DateTime @default(now()) @map("created_at")
+
+  owner   User         @relation("ClubOwner", fields: [ownerId], references: [id])
+  members ClubMember[]
+  tables  ClubTable[]
+
+  @@map("clubs")
+}
+
+model ClubMember {
+  id       String   @id @default(uuid())
+  clubId   String   @map("club_id")
+  userId   String   @map("user_id")
+  role     String   @default("member")
+  joinedAt DateTime @default(now()) @map("joined_at")
+
+  club Club @relation(fields: [clubId], references: [id], onDelete: Cascade)
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([clubId, userId])
+  @@map("club_members")
+}
+
+model ClubTable {
+  id       String @id @default(uuid())
+  clubId   String @map("club_id")
+  name     String
+  stakes   String @default("1/2")
+  gameType String @default("cash") @map("game_type")
+  status   String @default("active")
+  createdAt DateTime @default(now()) @map("created_at")
+
+  club Club @relation(fields: [clubId], references: [id], onDelete: Cascade)
+
+  @@map("club_tables")
+}
+
+model HandHistory {
+  id        String   @id @default(uuid())
+  userId    String   @map("user_id")
+  tableId   String   @map("table_id")
+  handData  Json     @map("hand_data")
+  result    String
+  wonAmount Int      @default(0) @map("won_amount")
+  playedAt  DateTime @default(now()) @map("played_at")
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("hand_histories")
+}
+
+model Transaction {
+  id          String   @id @default(uuid())
+  userId      String   @map("user_id")
+  type        String
+  amount      Int
+  currency    String
+  description String?
+  createdAt   DateTime @default(now()) @map("created_at")
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("transactions")
+}
