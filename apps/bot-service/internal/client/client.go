@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"log"
 	"net/url"
+	"sync"
 	"time"
 
 	"github.com/depuzhiguang/bot-service/internal/ai"
@@ -77,6 +78,7 @@ type GameClient struct {
 	engine   *ai.Engine
 	conn     *websocket.Conn
 	stopCh   chan struct{}
+	actionMu sync.RWMutex
 	onAction func(phase, action string, amount, pot, stack int)
 }
 
@@ -157,8 +159,12 @@ func (c *GameClient) Run() {
 	}
 }
 
-// SetActionCallback sets the callback invoked before an action is sent.
+// SetActionCallback registers a callback that will be invoked after each AI decision.
+// The callback runs on the WebSocket read goroutine and must not block.
+// Must be called before Connect/Run.
 func (c *GameClient) SetActionCallback(cb func(phase, action string, amount, pot, stack int)) {
+	c.actionMu.Lock()
+	defer c.actionMu.Unlock()
 	c.onAction = cb
 }
 
@@ -232,7 +238,12 @@ func (c *GameClient) handleStateSnapshot(raw json.RawMessage) {
 	decision := c.engine.Decide(myHole, community, state.Pot, toCall, myStack, minRaise)
 
 	if c.onAction != nil {
-		c.onAction(getPhase(state.State), decision.Action, decision.Amount, state.Pot, myStack)
+		c.actionMu.RLock()
+		cb := c.onAction
+		c.actionMu.RUnlock()
+		if cb != nil {
+			cb(getPhase(state.State), decision.Action, decision.Amount, state.Pot, myStack)
+		}
 	}
 
 	actionPayload, _ := json.Marshal(ActionPayload{
