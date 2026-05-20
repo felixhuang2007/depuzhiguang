@@ -21,7 +21,11 @@ func main() {
 	}
 
 	fmt.Printf("Bot Service starting with %d bots, WS URL: %s\n", *count, *wsURL)
-	m := manager.NewManager(*wsURL)
+	apiURL := "http://localhost:3000"
+	if envAPI := os.Getenv("API_BASE_URL"); envAPI != "" {
+		apiURL = envAPI
+	}
+	m := manager.NewManager(*wsURL, apiURL)
 	m.Spawn(*count)
 	fmt.Printf("Spawned %d bots\n", *count)
 

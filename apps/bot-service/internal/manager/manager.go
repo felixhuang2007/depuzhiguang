@@ -8,6 +8,7 @@ import (
 
 	"github.com/depuzhiguang/bot-service/internal/ai"
 	"github.com/depuzhiguang/bot-service/internal/client"
+	"github.com/depuzhiguang/bot-service/internal/collector"
 	"github.com/depuzhiguang/bot-service/internal/identity"
 )
 
@@ -22,17 +23,19 @@ type Bot struct {
 }
 
 type Manager struct {
-	bots   map[string]*Bot
-	mu     sync.RWMutex
-	tables map[string][]string
-	wsURL  string
+	bots      map[string]*Bot
+	mu        sync.RWMutex
+	tables    map[string][]string
+	wsURL     string
+	collector *collector.Collector
 }
 
-func NewManager(wsURL string) *Manager {
+func NewManager(wsURL, apiURL string) *Manager {
 	return &Manager{
-		bots:   make(map[string]*Bot),
-		tables: make(map[string][]string),
-		wsURL:  wsURL,
+		bots:      make(map[string]*Bot),
+		tables:    make(map[string][]string),
+		wsURL:     wsURL,
+		collector: collector.NewCollector(apiURL),
 	}
 }
 
@@ -73,7 +76,15 @@ func (m *Manager) AssignToTable(botID, tableID string) error {
 	// Create and connect WebSocket client
 	gc := client.NewGameClient(m.wsURL, bot.Profile.ID, tableID, bot.Engine)
 	gc.SetActionCallback(func(phase, action string, amount, pot, stack int) {
-		log.Printf("[%s] Action logged: %s %d (phase: %s)", bot.Profile.ID, action, amount, phase)
+		if err := m.collector.LogAction(collector.ActionRecord{
+			UserID:  bot.Profile.ID,
+			TableID: tableID,
+			Phase:   phase,
+			Action:  action,
+			Amount:  amount,
+		}); err != nil {
+			log.Printf("[%s] Failed to log action: %v", bot.Profile.ID, err)
+		}
 	})
 	bot.client = gc
 	if err := gc.Connect(); err != nil {
