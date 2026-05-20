@@ -3,6 +3,7 @@ package manager
 import (
 	"context"
 	"fmt"
+	"log"
 	"sync"
 
 	"github.com/depuzhiguang/bot-service/internal/ai"
@@ -71,6 +72,9 @@ func (m *Manager) AssignToTable(botID, tableID string) error {
 
 	// Create and connect WebSocket client
 	gc := client.NewGameClient(m.wsURL, bot.Profile.ID, tableID, bot.Engine)
+	gc.SetActionCallback(func(phase, action string, amount, pot, stack int) {
+		log.Printf("[%s] Action logged: %s %d (phase: %s)", bot.Profile.ID, action, amount, phase)
+	})
 	bot.client = gc
 	if err := gc.Connect(); err != nil {
 		bot.Status = "error"

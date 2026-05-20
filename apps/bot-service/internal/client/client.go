@@ -77,6 +77,7 @@ type GameClient struct {
 	engine   *ai.Engine
 	conn     *websocket.Conn
 	stopCh   chan struct{}
+	onAction func(phase, action string, amount, pot, stack int)
 }
 
 // NewGameClient creates a new game client for a bot.
@@ -156,6 +157,11 @@ func (c *GameClient) Run() {
 	}
 }
 
+// SetActionCallback sets the callback invoked before an action is sent.
+func (c *GameClient) SetActionCallback(cb func(phase, action string, amount, pot, stack int)) {
+	c.onAction = cb
+}
+
 // Stop disconnects the client.
 func (c *GameClient) Stop() {
 	close(c.stopCh)
@@ -225,6 +231,10 @@ func (c *GameClient) handleStateSnapshot(raw json.RawMessage) {
 
 	decision := c.engine.Decide(myHole, community, state.Pot, toCall, myStack, minRaise)
 
+	if c.onAction != nil {
+		c.onAction(getPhase(state.State), decision.Action, decision.Amount, state.Pot, myStack)
+	}
+
 	actionPayload, _ := json.Marshal(ActionPayload{
 		TableID:  c.tableID,
 		PlayerID: c.playerID,
@@ -239,6 +249,21 @@ func (c *GameClient) handleStateSnapshot(raw json.RawMessage) {
 			log.Printf("[%s] Failed to send action: %v", c.playerID, err)
 		}
 	})
+}
+
+func getPhase(state int) string {
+	switch state {
+	case 2:
+		return "preflop"
+	case 3:
+		return "flop"
+	case 4:
+		return "turn"
+	case 5:
+		return "river"
+	default:
+		return "unknown"
+	}
 }
 
 func cardToString(c CardJSON) string {
