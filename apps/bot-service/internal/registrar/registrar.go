@@ -2,10 +2,8 @@ package registrar
 
 import (
 	"bytes"
-	"crypto/rand"
 	"encoding/json"
 	"fmt"
-	"math/big"
 	"net/http"
 	"time"
 )
@@ -32,15 +30,9 @@ func NewRegistrar(apiBaseURL string) *Registrar {
 	}
 }
 
-func generateSecurePassword() string {
-	const charset = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789!@#$%"
-	length := 12
-	b := make([]byte, length)
-	for i := range b {
-		n, _ := rand.Int(rand.Reader, big.NewInt(int64(len(charset))))
-		b[i] = charset[n.Int64()]
-	}
-	return "Sim" + string(b)
+func generateSecurePassword(username string) string {
+	// Deterministic password per username so restart can login after 409
+	return "SimPwd_" + username + "_2025"
 }
 
 func GenerateProfile(index int, style string) SimProfile {
@@ -49,7 +41,7 @@ func GenerateProfile(index int, style string) SimProfile {
 	return SimProfile{
 		Username:    fmt.Sprintf("sim_%s_%d", fn, index),
 		Email:       fmt.Sprintf("sim_%s_%d@test.com", fn, index),
-		Password:    generateSecurePassword(),
+		Password:    generateSecurePassword(fmt.Sprintf("sim_%s_%d", fn, index)),
 		Nickname:    fmt.Sprintf("%s the %s", fn, style),
 		Style:       style,
 		InitialGold: 10000,
