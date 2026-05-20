@@ -72,15 +72,19 @@ services:
           memory: 256M
     restart: unless-stopped
 
-  bot-service:
+  simulation-service:
     build:
       context: ../apps/bot-service
       dockerfile: Dockerfile
-    container_name: depg-bot
+    container_name: depg-sim
     environment:
       GAME_SERVER_WS: ws://game-server:8080/ws
-      BOT_COUNT: ${BOT_COUNT:-20}
+      API_BASE_URL: http://api-server:3000
+      SIM_USER_COUNT: 20
+      SIM_TABLE_COUNT: 3
+      SIM_DAILY_HANDS: 1000
     depends_on:
+      - api-server
       - game-server
     deploy:
       resources:
