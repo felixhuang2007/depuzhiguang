@@ -1,6 +1,8 @@
 package server
 
 import (
+	"io"
+	"log/slog"
 	"testing"
 
 	"github.com/gorilla/websocket"
@@ -8,14 +10,14 @@ import (
 )
 
 func TestNewHub(t *testing.T) {
-	h := NewHub()
+	h := NewHub(slog.New(slog.NewJSONHandler(io.Discard, nil)))
 	assert.NotNil(t, h)
 	assert.NotNil(t, h.connections)
 	assert.NotNil(t, h.tablePlayers)
 }
 
 func TestHub_RegisterUnregister(t *testing.T) {
-	h := NewHub()
+	h := NewHub(slog.New(slog.NewJSONHandler(io.Discard, nil)))
 	// Use a mock conn (nil is fine for Register/Unregister logic)
 	h.Register("p1", nil)
 	assert.Equal(t, 1, len(h.connections))
@@ -25,7 +27,7 @@ func TestHub_RegisterUnregister(t *testing.T) {
 }
 
 func TestHub_JoinLeaveTable(t *testing.T) {
-	h := NewHub()
+	h := NewHub(slog.New(slog.NewJSONHandler(io.Discard, nil)))
 	h.Register("p1", nil)
 	h.Register("p2", nil)
 
@@ -42,7 +44,7 @@ func TestHub_JoinLeaveTable(t *testing.T) {
 }
 
 func TestHub_SendToPlayer(t *testing.T) {
-	h := NewHub()
+	h := NewHub(slog.New(slog.NewJSONHandler(io.Discard, nil)))
 	// Sending to unregistered player should not panic
 	err := h.SendToPlayer("p1", Message{Type: MsgPong})
 	assert.NoError(t, err)

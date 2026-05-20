@@ -1,6 +1,7 @@
 package server
 
 import (
+	"log/slog"
 	"sync"
 
 	"github.com/gorilla/websocket"
@@ -17,15 +18,17 @@ type Hub struct {
 	// observers maps tableID to set of observing playerIDs
 	observers map[string]map[string]struct{}
 	mu        sync.RWMutex
+	logg      *slog.Logger
 }
 
 // NewHub creates a new connection hub
-func NewHub() *Hub {
+func NewHub(logg *slog.Logger) *Hub {
 	return &Hub{
 		connections:  make(map[string]*websocket.Conn),
 		writeMu:      make(map[string]*sync.Mutex),
 		tablePlayers: make(map[string]map[string]struct{}),
 		observers:    make(map[string]map[string]struct{}),
+		logg:         logg,
 	}
 }
 
@@ -119,7 +122,9 @@ func (h *Hub) BroadcastToObservers(tableID string, msg Message) {
 		if conn != nil {
 			if mu := muMap[pid]; mu != nil {
 				mu.Lock()
-				_ = conn.WriteJSON(msg)
+				if err := conn.WriteJSON(msg); err != nil {
+					h.logg.Error("broadcast to observer failed", "player_id", pid, "error", err)
+				}
 				mu.Unlock()
 			}
 		}
@@ -158,7 +163,9 @@ func (h *Hub) BroadcastToTable(tableID string, msg Message) {
 		if conn != nil {
 			if mu := muMap[pid]; mu != nil {
 				mu.Lock()
-				_ = conn.WriteJSON(msg)
+				if err := conn.WriteJSON(msg); err != nil {
+					h.logg.Error("broadcast to table failed", "player_id", pid, "error", err)
+				}
 				mu.Unlock()
 			}
 		}
@@ -183,7 +190,9 @@ func (h *Hub) BroadcastToTableExcept(tableID, excludePlayerID string, msg Messag
 		if conn != nil {
 			if mu := muMap[pid]; mu != nil {
 				mu.Lock()
-				_ = conn.WriteJSON(msg)
+				if err := conn.WriteJSON(msg); err != nil {
+					h.logg.Error("broadcast to table except failed", "player_id", pid, "error", err)
+				}
 				mu.Unlock()
 			}
 		}

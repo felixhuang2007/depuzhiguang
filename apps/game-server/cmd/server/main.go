@@ -1,26 +1,34 @@
 package main
 
 import (
-	"fmt"
-	"log"
+	"context"
+	"log/slog"
 	"os"
 	"os/signal"
 	"syscall"
 
+	"github.com/depuzhiguang/game-server/internal/logger"
 	"github.com/depuzhiguang/game-server/internal/server"
 )
 
 func main() {
-	fmt.Println("De Pu Zhi Guang - Game Server")
-
 	port := os.Getenv("PORT")
 	if port == "" {
 		port = "8080"
 	}
-	srv := server.NewServer(":" + port)
+
+	apiBaseURL := os.Getenv("API_BASE_URL")
+	if apiBaseURL == "" {
+		apiBaseURL = "http://localhost:3000"
+	}
+
+	logg := logger.New("game-server")
+	logg.Info("De Pu Zhi Guang - Game Server starting", slog.String("port", port))
+
+	srv := server.NewServer(":"+port, apiBaseURL, logg)
 	go func() {
 		if err := srv.Start(); err != nil {
-			log.Printf("Server error: %v", err)
+			logg.Error("Server error", slog.String("error", err.Error()))
 		}
 	}()
 
@@ -28,5 +36,8 @@ func main() {
 	signal.Notify(sigCh, syscall.SIGINT, syscall.SIGTERM)
 	<-sigCh
 
-	fmt.Println("Shutting down...")
+	logg.Info("Shutting down...")
+	if err := srv.Shutdown(context.Background()); err != nil {
+		logg.Error("Shutdown error", slog.String("error", err.Error()))
+	}
 }

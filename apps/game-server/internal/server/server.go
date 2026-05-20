@@ -3,7 +3,7 @@ package server
 import (
 	"context"
 	"fmt"
-	"log"
+	"log/slog"
 	"net/http"
 	"time"
 
@@ -24,17 +24,19 @@ type Server struct {
 	hub    *Hub
 	tm     *TableManager
 	server *http.Server
+	logg   *slog.Logger
 }
 
 // NewServer creates a new game server
-func NewServer(addr string) *Server {
-	hub := NewHub()
-	tm := NewTableManager(hub)
+func NewServer(addr string, apiBaseURL string, logg *slog.Logger) *Server {
+	hub := NewHub(logg)
+	tm := NewTableManager(hub, logg)
 	mux := http.NewServeMux()
 
 	s := &Server{
-		hub: hub,
-		tm:  tm,
+		hub:  hub,
+		tm:   tm,
+		logg: logg,
 		server: &http.Server{
 			Addr:    addr,
 			Handler: mux,
@@ -45,7 +47,7 @@ func NewServer(addr string) *Server {
 	mux.HandleFunc("/ws", s.wsHandler)
 
 	// Create default test table
-	_, _ = tm.CreateTable(table.TableConfig{
+	if _, err := tm.CreateTable(table.TableConfig{
 		ID:          "default-6max",
 		Name:        "Default 6-Max",
 		MaxSeats:    6,
@@ -55,12 +57,14 @@ func NewServer(addr string) *Server {
 		MaxBuyIn:    200,
 		RakePercent: 0.05,
 		RakeCap:     3,
-	})
+	}); err != nil {
+		s.logg.Error("failed to create table", "error", err)
+	}
 
 	// Create simulation tables (match bot-service scheduler)
 	simTableNames := []string{"sim-table-0", "sim-table-1", "sim-table-2"}
 	for _, name := range simTableNames {
-		_, _ = tm.CreateTable(table.TableConfig{
+		if _, err := tm.CreateTable(table.TableConfig{
 			ID:          name,
 			Name:        name,
 			MaxSeats:    7,
@@ -70,7 +74,9 @@ func NewServer(addr string) *Server {
 			MaxBuyIn:    200,
 			RakePercent: 0.05,
 			RakeCap:     3,
-		})
+		}); err != nil {
+			s.logg.Error("failed to create table", "error", err)
+		}
 	}
 
 	return s
@@ -78,7 +84,7 @@ func NewServer(addr string) *Server {
 
 // Start begins listening for connections
 func (s *Server) Start() error {
-	log.Printf("Server starting on %s", s.server.Addr)
+	s.logg.Info("Server starting", slog.String("addr", s.server.Addr))
 	return s.server.ListenAndServe()
 }
 
@@ -96,7 +102,7 @@ func (s *Server) healthHandler(w http.ResponseWriter, r *http.Request) {
 func (s *Server) wsHandler(w http.ResponseWriter, r *http.Request) {
 	conn, err := upgrader.Upgrade(w, r, nil)
 	if err != nil {
-		log.Printf("WebSocket upgrade failed: %v", err)
+		s.logg.Error("WebSocket upgrade failed", slog.String("error", err.Error()))
 		return
 	}
 	defer conn.Close()
@@ -121,7 +127,7 @@ func (s *Server) wsHandler(w http.ResponseWriter, r *http.Request) {
 		}
 	}()
 
-	log.Printf("Player %s connected", playerID)
+	s.logg.Info("Player connected", slog.String("player_id", playerID))
 
 	// Send welcome message
 	_ = conn.WriteJSON(Message{Type: MsgPong, Payload: map[string]string{"message": "connected"}})
@@ -131,7 +137,7 @@ func (s *Server) wsHandler(w http.ResponseWriter, r *http.Request) {
 		var msg Message
 		if err := conn.ReadJSON(&msg); err != nil {
 			if websocket.IsUnexpectedCloseError(err, websocket.CloseGoingAway, websocket.CloseAbnormalClosure) {
-				log.Printf("WebSocket error for %s: %v", playerID, err)
+				s.logg.Error("WebSocket error", slog.String("player_id", playerID), slog.String("error", err.Error()))
 			}
 			break
 		}
@@ -187,18 +193,18 @@ func (s *Server) wsHandler(w http.ResponseWriter, r *http.Request) {
 			}
 			// Parse action type from string
 			action.Action = parseActionType(getString(payload, "action"))
-			log.Printf("Action from %s: %s %d", playerID, getString(payload, "action"), action.Amount)
+			s.logg.Info("Action received", slog.String("player_id", playerID), slog.String("action", getString(payload, "action")), slog.Int("amount", action.Amount))
 			if err := s.tm.HandleAction(action); err != nil {
-				log.Printf("Action failed for %s: %v", playerID, err)
+				s.logg.Error("Action failed", slog.String("player_id", playerID), slog.String("error", err.Error()))
 				_ = conn.WriteJSON(Message{Type: MsgError, Payload: ErrorPayload{Code: "action_failed", Message: err.Error()}})
 			}
 
 		default:
-			log.Printf("Received %s from %s", msg.Type, playerID)
+			s.logg.Info("Received message", slog.String("type", string(msg.Type)), slog.String("player_id", playerID))
 		}
 	}
 
-	log.Printf("Player %s disconnected", playerID)
+	s.logg.Info("Player disconnected", slog.String("player_id", playerID))
 }
 
 func getString(m map[string]interface{}, key string) string {

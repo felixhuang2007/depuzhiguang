@@ -2,7 +2,7 @@ package server
 
 import (
 	"fmt"
-	"log"
+	"log/slog"
 	"sync"
 
 	"github.com/depuzhiguang/game-server/internal/table"
@@ -13,6 +13,7 @@ type TableManager struct {
 	hub    *Hub
 	tables map[string]*tableManagerEntry
 	mu     sync.RWMutex
+	logg   *slog.Logger
 }
 
 type tableManagerEntry struct {
@@ -21,10 +22,11 @@ type tableManagerEntry struct {
 }
 
 // NewTableManager creates a new table manager.
-func NewTableManager(hub *Hub) *TableManager {
+func NewTableManager(hub *Hub, logg *slog.Logger) *TableManager {
 	return &TableManager{
 		hub:    hub,
 		tables: make(map[string]*tableManagerEntry),
+		logg:   logg,
 	}
 }
 
@@ -39,7 +41,11 @@ func (tm *TableManager) CreateTable(config table.TableConfig) (*table.Table, err
 
 	t := table.NewTable(config)
 	tm.tables[config.ID] = &tableManagerEntry{Table: t}
-	log.Printf("Table %s created (%d seats, %d/%d blinds)", config.ID, config.MaxSeats, config.SmallBlind, config.BigBlind)
+	tm.logg.Info("Table created",
+		slog.String("table_id", config.ID),
+		slog.Int("max_seats", config.MaxSeats),
+		slog.Int("small_blind", config.SmallBlind),
+		slog.Int("big_blind", config.BigBlind))
 	return t, nil
 }
 
@@ -66,7 +72,12 @@ func (tm *TableManager) HandleJoin(payload JoinTablePayload) error {
 
 	t := entry.Table
 	seat := t.NextAvailableSeat()
-	log.Printf("HandleJoin: player=%s table=%s nextSeat=%d occupied=%d/%d", payload.PlayerID, payload.TableID, seat, t.PlayerCount(), t.Config.MaxSeats)
+	tm.logg.Info("HandleJoin",
+		slog.String("player_id", payload.PlayerID),
+		slog.String("table_id", payload.TableID),
+		slog.Int("seat", seat),
+		slog.Int("occupied", t.PlayerCount()),
+		slog.Int("max_seats", t.Config.MaxSeats))
 	if seat < 0 {
 		return fmt.Errorf("table is full")
 	}
@@ -98,10 +109,12 @@ func (tm *TableManager) HandleJoin(payload JoinTablePayload) error {
 	if entry.Game == nil && t.PlayerCount() >= 2 {
 		entry.Game = table.NewGame(t)
 		if err := entry.Game.Start(); err != nil {
-			log.Printf("Failed to start game on table %s: %v", payload.TableID, err)
+			tm.logg.Error("Failed to start game",
+				slog.String("table_id", payload.TableID),
+				slog.String("error", err.Error()))
 			entry.Game = nil
 		} else {
-			log.Printf("Game started on table %s", payload.TableID)
+			tm.logg.Info("Game started", slog.String("table_id", payload.TableID))
 			go tm.broadcastGameState(payload.TableID, entry)
 		}
 	}
@@ -200,9 +213,9 @@ func (tm *TableManager) sendStateSnapshot(playerID string, entry *tableManagerEn
 	}
 
 	payload := StateSnapshotPayload{
-		TableID:   t.Config.ID,
-		Players:   players,
-		Pot:       0,
+		TableID:     t.Config.ID,
+		Players:     players,
+		Pot:         0,
 		CurrentTurn: -1,
 	}
 
@@ -258,7 +271,9 @@ func (tm *TableManager) scheduleNextHand(tableID string) {
 	}
 	entry.Game = table.NewGame(entry.Table)
 	if err := entry.Game.Start(); err != nil {
-		log.Printf("Failed to restart game on table %s: %v", tableID, err)
+		tm.logg.Error("Failed to restart game",
+			slog.String("table_id", tableID),
+			slog.String("error", err.Error()))
 		entry.Game = nil
 		tm.mu.Unlock()
 		return
