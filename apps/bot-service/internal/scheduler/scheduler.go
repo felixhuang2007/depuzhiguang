@@ -19,18 +19,33 @@ type Scheduler struct {
 	maxPerTable      int
 	tables           []TableAssignment
 	handsPlayed      int
+	lastRotatedAt    int
 	rotationInterval int
 	mu               sync.RWMutex
+	rng              *rand.Rand
 }
 
-func NewScheduler(userIDs []string, tableCount, minPerTable, maxPerTable int) *Scheduler {
+func NewScheduler(userIDs []string, tableCount, minPerTable, maxPerTable int) (*Scheduler, error) {
+	if tableCount <= 0 {
+		return nil, fmt.Errorf("tableCount must be > 0")
+	}
+	if minPerTable <= 0 || maxPerTable < minPerTable {
+		return nil, fmt.Errorf("invalid min/max per table: %d/%d", minPerTable, maxPerTable)
+	}
+	if len(userIDs) < tableCount*minPerTable {
+		return nil, fmt.Errorf("not enough users (%d) for %d tables with min %d", len(userIDs), tableCount, minPerTable)
+	}
+	if len(userIDs) > tableCount*maxPerTable {
+		return nil, fmt.Errorf("too many users (%d) for %d tables with max %d", len(userIDs), tableCount, maxPerTable)
+	}
 	return &Scheduler{
 		userIDs:          userIDs,
 		tableCount:       tableCount,
 		minPerTable:      minPerTable,
 		maxPerTable:      maxPerTable,
 		rotationInterval: 20,
-	}
+		rng:              rand.New(rand.NewSource(time.Now().UnixNano())),
+	}, nil
 }
 
 func (s *Scheduler) Assign() []TableAssignment {
@@ -40,10 +55,9 @@ func (s *Scheduler) Assign() []TableAssignment {
 }
 
 func (s *Scheduler) assignUnsafe() []TableAssignment {
-	rand.Seed(time.Now().UnixNano())
 	shuffled := make([]string, len(s.userIDs))
 	copy(shuffled, s.userIDs)
-	rand.Shuffle(len(shuffled), func(i, j int) {
+	s.rng.Shuffle(len(shuffled), func(i, j int) {
 		shuffled[i], shuffled[j] = shuffled[j], shuffled[i]
 	})
 
@@ -69,13 +83,14 @@ func (s *Scheduler) assignUnsafe() []TableAssignment {
 func (s *Scheduler) Rotate() {
 	s.mu.Lock()
 	defer s.mu.Unlock()
+	s.lastRotatedAt = s.handsPlayed
 	s.assignUnsafe()
 }
 
 func (s *Scheduler) ShouldRotate() bool {
 	s.mu.RLock()
 	defer s.mu.RUnlock()
-	return s.handsPlayed > 0 && s.handsPlayed%s.rotationInterval == 0
+	return s.handsPlayed > 0 && s.handsPlayed-s.lastRotatedAt >= s.rotationInterval
 }
 
 func (s *Scheduler) RecordHandPlayed() {
