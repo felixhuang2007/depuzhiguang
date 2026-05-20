@@ -72,14 +72,16 @@ type PlayerState struct {
 
 // GameClient connects a bot to the game server via WebSocket.
 type GameClient struct {
-	wsURL    string
-	playerID string
-	tableID  string
-	engine   *ai.Engine
-	conn     *websocket.Conn
-	stopCh   chan struct{}
-	actionMu sync.RWMutex
-	onAction func(phase, action string, amount, pot, stack int)
+	wsURL       string
+	playerID    string
+	tableID     string
+	engine      *ai.Engine
+	conn        *websocket.Conn
+	stopCh      chan struct{}
+	actionMu    sync.RWMutex
+	onAction    func(phase, action string, amount, pot, stack int)
+	handsPlayed int
+	maxHands    int
 }
 
 // NewGameClient creates a new game client for a bot.
@@ -148,7 +150,8 @@ func (c *GameClient) Run() {
 		case MsgStateSnapshot:
 			c.handleStateSnapshot(msg.Payload)
 		case MsgHandResult:
-			log.Printf("[%s] Hand result received", c.playerID)
+			c.handsPlayed++
+			log.Printf("[%s] Hand result received (hands: %d/%d)", c.playerID, c.handsPlayed, c.maxHands)
 		case MsgError:
 			log.Printf("[%s] Error: %s", c.playerID, string(msg.Payload))
 		case MsgPong:
@@ -175,6 +178,34 @@ func (c *GameClient) Stop() {
 		c.conn.WriteMessage(websocket.CloseMessage, websocket.FormatCloseMessage(websocket.CloseNormalClosure, ""))
 		c.conn.Close()
 	}
+}
+
+// SetMaxHands sets the maximum number of hands this bot will play.
+func (c *GameClient) SetMaxHands(n int) {
+	c.maxHands = n
+}
+
+// HandsPlayed returns the number of hands played so far.
+func (c *GameClient) HandsPlayed() int {
+	return c.handsPlayed
+}
+
+// MaxHands returns the maximum number of hands.
+func (c *GameClient) MaxHands() int {
+	return c.maxHands
+}
+
+// Leave sends a leave_table message and disconnects.
+func (c *GameClient) Leave() error {
+	payload, _ := json.Marshal(map[string]string{
+		"table_id":  c.tableID,
+		"player_id": c.playerID,
+	})
+	if err := c.conn.WriteJSON(Message{Type: MsgLeaveTable, Payload: payload}); err != nil {
+		return err
+	}
+	c.Stop()
+	return nil
 }
 
 func (c *GameClient) pingLoop() {
