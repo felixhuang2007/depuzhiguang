@@ -50,6 +50,8 @@ services:
     depends_on:
       - postgres
       - redis
+    volumes:
+      - ./logs/api-server:/app/logs
     deploy:
       resources:
         limits:
@@ -66,6 +68,8 @@ services:
     environment:
       PORT: 8080
       API_BASE_URL: http://api-server:3000
+    volumes:
+      - ./logs/game-server:/app/logs
     deploy:
       resources:
         limits:
@@ -86,6 +90,8 @@ services:
     depends_on:
       - api-server
       - game-server
+    volumes:
+      - ./logs/bot-service:/app/logs
     deploy:
       resources:
         limits:
