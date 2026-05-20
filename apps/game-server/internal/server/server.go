@@ -44,7 +44,7 @@ func NewServer(addr string) *Server {
 	mux.HandleFunc("/health", s.healthHandler)
 	mux.HandleFunc("/ws", s.wsHandler)
 
-	// Create a default test table
+	// Create default test table
 	_, _ = tm.CreateTable(table.TableConfig{
 		ID:          "default-6max",
 		Name:        "Default 6-Max",
@@ -56,6 +56,22 @@ func NewServer(addr string) *Server {
 		RakePercent: 0.05,
 		RakeCap:     3,
 	})
+
+	// Create simulation tables (match bot-service scheduler)
+	simTableNames := []string{"sim-table-0", "sim-table-1", "sim-table-2"}
+	for _, name := range simTableNames {
+		_, _ = tm.CreateTable(table.TableConfig{
+			ID:          name,
+			Name:        name,
+			MaxSeats:    7,
+			SmallBlind:  5,
+			BigBlind:    10,
+			MinBuyIn:    50,
+			MaxBuyIn:    200,
+			RakePercent: 0.05,
+			RakeCap:     3,
+		})
+	}
 
 	return s
 }
