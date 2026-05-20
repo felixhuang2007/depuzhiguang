@@ -5,6 +5,7 @@ import (
 	"os"
 	"os/signal"
 	"syscall"
+	"time"
 
 	"github.com/depuzhiguang/bot-service/internal/ai"
 	"github.com/depuzhiguang/bot-service/internal/logger"
@@ -41,16 +42,12 @@ func main() {
 	}
 	logg.Info("registered users", "count", len(profiles))
 
-	// Step 2: Setup scheduler
+	// Step 2: Setup dynamic scheduler
 	userIDs := make([]string, len(profiles))
 	for i, p := range profiles {
 		userIDs[i] = p.UserID
 	}
-	sched, err := scheduler.NewScheduler(userIDs, 3, 5, 7)
-	if err != nil {
-		logg.Error("failed to create scheduler", "error", err)
-		os.Exit(1)
-	}
+	ds := scheduler.NewDynamicScheduler(*apiURL, userIDs)
 
 	// Step 3: Setup manager
 	mgr := manager.NewManager(*wsURL, *apiURL)
@@ -65,18 +62,57 @@ func main() {
 		mgr.RegisterBot(profile.UserID, engine)
 	}
 
-	// Step 6: Assign to tables and start
-	tables := sched.Assign()
-	for _, table := range tables {
-		logg.Info("table assigned", "table_id", table.TableID, "user_count", len(table.Users))
-		for _, uid := range table.Users {
-			if err := mgr.AssignToTable(uid, table.TableID); err != nil {
-				logg.Error("failed to assign user to table", "user_id", uid, "table_id", table.TableID, "error", err)
+	logg.Info("simulation running", "message", "Press Ctrl+C to stop")
+
+	// Step 6: Start dynamic scheduler loop
+	stopCh := make(chan struct{})
+	go func() {
+		ticker := time.NewTicker(5 * time.Second)
+		defer ticker.Stop()
+		for {
+			select {
+			case <-ticker.C:
+				actions := ds.Tick()
+				for _, act := range actions {
+					switch act.Type {
+					case "assign":
+						if err := mgr.AssignToTable(act.BotID, act.TableID); err != nil {
+							logg.Error("assign failed", "bot", act.BotID, "table", act.TableID, "error", err)
+						} else {
+							logg.Info("assigned bot", "bot", act.BotID, "table", act.TableID)
+						}
+					case "unassign":
+						if err := mgr.UnassignFromTable(act.BotID); err != nil {
+							logg.Error("unassign failed", "bot", act.BotID, "error", err)
+						} else {
+							logg.Info("unassigned bot", "bot", act.BotID)
+						}
+					}
+				}
+			case <-stopCh:
+				return
 			}
 		}
-	}
+	}()
 
-	logg.Info("simulation running", "message", "Press Ctrl+C to stop")
+	// Step 7: Watch hand results to increment hand count in scheduler
+	go func() {
+		ticker := time.NewTicker(5 * time.Second)
+		defer ticker.Stop()
+		for {
+			select {
+			case <-ticker.C:
+				for botID, ab := range ds.ActiveBots() {
+					hands := mgr.GetBotHandsPlayed(botID)
+					for i := ab.HandsPlayed; i < hands; i++ {
+						ds.RecordHandPlayed(botID)
+					}
+				}
+			case <-stopCh:
+				return
+			}
+		}
+	}()
 
 	// Graceful shutdown
 	sigCh := make(chan os.Signal, 1)
@@ -84,6 +120,7 @@ func main() {
 	<-sigCh
 
 	logg.Info("shutting down")
+	close(stopCh)
 	mgr.StopAll()
 	logg.Info("done")
 }
