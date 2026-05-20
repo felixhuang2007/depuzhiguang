@@ -160,3 +160,58 @@ func (m *Manager) Stats() map[string]interface{} {
 	}
 	return map[string]interface{}{"total": total, "playing": playing, "tables": len(m.tables)}
 }
+
+func (m *Manager) UnassignFromTable(botID string) error {
+	m.mu.Lock()
+	defer m.mu.Unlock()
+
+	bot, ok := m.bots[botID]
+	if !ok {
+		return fmt.Errorf("bot not found: %s", botID)
+	}
+
+	if bot.client != nil {
+		bot.client.Leave()
+	}
+
+	bot.Status = "idle"
+	bot.TableID = ""
+
+	// Remove from table assignment
+	for tid, ids := range m.tables {
+		filtered := make([]string, 0, len(ids))
+		for _, id := range ids {
+			if id != botID {
+				filtered = append(filtered, id)
+			}
+		}
+		m.tables[tid] = filtered
+	}
+
+	return nil
+}
+
+func (m *Manager) GetBot(botID string) (*Bot, bool) {
+	m.mu.RLock()
+	defer m.mu.RUnlock()
+	bot, ok := m.bots[botID]
+	return bot, ok
+}
+
+func (m *Manager) GetTableBots(tableID string) []string {
+	m.mu.RLock()
+	defer m.mu.RUnlock()
+	ids := make([]string, len(m.tables[tableID]))
+	copy(ids, m.tables[tableID])
+	return ids
+}
+
+func (m *Manager) GetBotHandsPlayed(botID string) int {
+	m.mu.RLock()
+	defer m.mu.RUnlock()
+	bot, ok := m.bots[botID]
+	if !ok || bot.client == nil {
+		return 0
+	}
+	return bot.client.HandsPlayed()
+}
