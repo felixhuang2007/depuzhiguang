@@ -5,27 +5,46 @@ const router = Router();
 const prisma = new PrismaClient();
 
 // POST /api/sim/actions - Record an action
-router.post('/actions', async (req, res) => {
+router.post('/actions', async (req, res, next) => {
   try {
-    const action = await prisma.simAction.create({ data: req.body });
-    res.status(201).json(action);
+    const { userId, tableId, phase, action } = req.body;
+    if (!userId || !tableId || !phase || !action) {
+      res.status(400).json({ error: 'Missing required fields: userId, tableId, phase, action' });
+      return;
+    }
+    const record = await prisma.simAction.create({ data: req.body });
+    res.status(201).json(record);
   } catch (err) {
-    res.status(500).json({ error: String(err) });
+    next(err);
   }
 });
 
-// POST /api/sim/results - Record a hand result
-router.post('/results', async (req, res) => {
+// POST /api/sim/results - Record a hand result and update user stats
+router.post('/results', async (req, res, next) => {
   try {
-    const result = await prisma.simAction.create({ data: req.body });
-    res.status(201).json(result);
+    const { userId, winAmount, isWinner } = req.body;
+    if (!userId || typeof winAmount !== 'number') {
+      res.status(400).json({ error: 'Missing userId or winAmount' });
+      return;
+    }
+
+    const user = await prisma.user.update({
+      where: { id: userId },
+      data: {
+        gold: { increment: winAmount },
+        handsPlayed: { increment: 1 },
+        handsWon: isWinner ? { increment: 1 } : undefined,
+      },
+    });
+
+    res.json({ user });
   } catch (err) {
-    res.status(500).json({ error: String(err) });
+    next(err);
   }
 });
 
 // GET /api/sim/leaderboard?metric=hands_won
-router.get('/leaderboard', async (req, res) => {
+router.get('/leaderboard', async (req, res, next) => {
   const metric = String(req.query.metric || 'hands_won');
   try {
     const entries = await prisma.simLeaderboard.findMany({
@@ -35,12 +54,12 @@ router.get('/leaderboard', async (req, res) => {
     });
     res.json(entries);
   } catch (err) {
-    res.status(500).json({ error: String(err) });
+    next(err);
   }
 });
 
 // GET /api/sim/users/:id/stats
-router.get('/users/:id/stats', async (req, res) => {
+router.get('/users/:id/stats', async (req, res, next) => {
   try {
     const user = await prisma.user.findUnique({
       where: { id: req.params.id },
@@ -49,7 +68,10 @@ router.get('/users/:id/stats', async (req, res) => {
         handsPlayed: true, handsWon: true, vpip: true, pfr: true,
       },
     });
-    if (!user) return res.status(404).json({ error: 'User not found' });
+    if (!user) {
+      res.status(404).json({ error: 'User not found' });
+      return;
+    }
 
     const recentActions = await prisma.simAction.findMany({
       where: { userId: req.params.id },
@@ -59,12 +81,12 @@ router.get('/users/:id/stats', async (req, res) => {
 
     res.json({ user, recentActions });
   } catch (err) {
-    res.status(500).json({ error: String(err) });
+    next(err);
   }
 });
 
 // GET /api/sim/anomalies
-router.get('/anomalies', async (req, res) => {
+router.get('/anomalies', async (req, res, next) => {
   try {
     const anomalies = await prisma.simAnomaly.findMany({
       orderBy: { detectedAt: 'desc' },
@@ -72,7 +94,7 @@ router.get('/anomalies', async (req, res) => {
     });
     res.json(anomalies);
   } catch (err) {
-    res.status(500).json({ error: String(err) });
+    next(err);
   }
 });
 
