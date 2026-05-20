@@ -41,7 +41,7 @@ func main() {
 	// Step 2: Setup scheduler
 	userIDs := make([]string, len(profiles))
 	for i, p := range profiles {
-		userIDs[i] = p.Username
+		userIDs[i] = p.UserID
 	}
 	sched, err := scheduler.NewScheduler(userIDs, 3, 5, 7)
 	if err != nil {
@@ -58,7 +58,7 @@ func main() {
 		persona := ai.GetPersona(style)
 		engine := ai.NewEngineWithPersona(persona, "BTN")
 		// Store bot in manager
-		mgr.RegisterBot(profile.Username, engine)
+		mgr.RegisterBot(profile.UserID, engine)
 	}
 
 	// Step 6: Assign to tables and start

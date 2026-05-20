@@ -7,12 +7,28 @@ const prisma = new PrismaClient();
 // POST /api/sim/actions - Record an action
 router.post('/actions', async (req, res, next) => {
   try {
-    const { userId, tableId, phase, action } = req.body;
+    const { userId, tableId, handNumber, phase, action, amount, potBefore, potAfter, stackBefore, stackAfter, holeCards, community } = req.body;
     if (!userId || !tableId || !phase || !action) {
       res.status(400).json({ error: 'Missing required fields: userId, tableId, phase, action' });
       return;
     }
-    const record = await prisma.simAction.create({ data: req.body });
+    const record = await prisma.simAction.create({
+      data: {
+        sessionId: req.body.sessionId || '',
+        userId,
+        tableId,
+        handNumber: handNumber || 0,
+        phase,
+        action,
+        amount: amount || 0,
+        potBefore: potBefore || 0,
+        potAfter: potAfter || 0,
+        stackBefore: stackBefore || 0,
+        stackAfter: stackAfter || 0,
+        holeCards: holeCards || null,
+        community: community || null,
+      },
+    });
     res.status(201).json(record);
   } catch (err) {
     next(err);

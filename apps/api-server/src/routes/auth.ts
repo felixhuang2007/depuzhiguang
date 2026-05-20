@@ -8,6 +8,10 @@ const registerSchema = z.object({
   username: z.string().min(3).max(30),
   email: z.string().email(),
   password: z.string().min(6),
+  nickname: z.string().optional(),
+  isSimUser: z.boolean().optional(),
+  simStyle: z.string().optional(),
+  simPersonality: z.string().optional(),
 });
 
 const loginSchema = z.object({
@@ -18,7 +22,12 @@ const loginSchema = z.object({
 router.post('/register', async (req, res, next) => {
   try {
     const data = registerSchema.parse(req.body);
-    const user = await register(data.username, data.email, data.password);
+    const user = await register(data.username, data.email, data.password, {
+      nickname: data.nickname,
+      isSimUser: data.isSimUser,
+      simStyle: data.simStyle,
+      simPersonality: data.simPersonality,
+    });
     res.status(201).json(user);
   } catch (err) {
     next(err);

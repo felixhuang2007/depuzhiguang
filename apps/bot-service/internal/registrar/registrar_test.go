@@ -1,6 +1,7 @@
 package registrar
 
 import (
+	"fmt"
 	"net/http"
 	"net/http/httptest"
 	"testing"
@@ -28,13 +29,14 @@ func TestRegistrar_RegisterUser_Success(t *testing.T) {
 	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		assert.Equal(t, "/api/auth/register", r.URL.Path)
 		w.WriteHeader(http.StatusCreated)
-		w.Write([]byte(`{"token":"abc123"}`))
+		w.Write([]byte(`{"id":"user-123","accessToken":"abc123"}`))
 	}))
 	defer srv.Close()
 
 	reg := NewRegistrar(srv.URL)
-	token, err := reg.RegisterUser(SimProfile{Username: "sim_test", Email: "t@test.com", Password: "pass", Nickname: "Test"})
+	userID, token, err := reg.RegisterUser(SimProfile{Username: "sim_test", Email: "t@test.com", Password: "pass", Nickname: "Test"})
 	require.NoError(t, err)
+	assert.Equal(t, "user-123", userID)
 	assert.Equal(t, "abc123", token)
 }
 
@@ -48,7 +50,7 @@ func TestRegistrar_RegisterUser_ConflictFallback(t *testing.T) {
 		}
 		if r.URL.Path == "/api/auth/login" {
 			w.WriteHeader(http.StatusOK)
-			w.Write([]byte(`{"accessToken":"fallback_token"}`))
+			w.Write([]byte(`{"accessToken":"fallback_token","user":{"id":"user-fb"}}`))
 			return
 		}
 		t.Fatalf("unexpected path: %s", r.URL.Path)
@@ -56,8 +58,9 @@ func TestRegistrar_RegisterUser_ConflictFallback(t *testing.T) {
 	defer srv.Close()
 
 	reg := NewRegistrar(srv.URL)
-	token, err := reg.RegisterUser(SimProfile{Username: "sim_test", Email: "t@test.com", Password: "pass", Nickname: "Test"})
+	userID, token, err := reg.RegisterUser(SimProfile{Username: "sim_test", Email: "t@test.com", Password: "pass", Nickname: "Test"})
 	require.NoError(t, err)
+	assert.Equal(t, "user-fb", userID)
 	assert.Equal(t, "fallback_token", token)
 	assert.Equal(t, 2, callCount)
 }
@@ -69,7 +72,7 @@ func TestRegistrar_RegisterUser_Error(t *testing.T) {
 	defer srv.Close()
 
 	reg := NewRegistrar(srv.URL)
-	_, err := reg.RegisterUser(SimProfile{Username: "sim_test", Email: "t@test.com", Password: "pass", Nickname: "Test"})
+	_, _, err := reg.RegisterUser(SimProfile{Username: "sim_test", Email: "t@test.com", Password: "pass", Nickname: "Test"})
 	require.Error(t, err)
 }
 
@@ -78,7 +81,7 @@ func TestRegistrar_RegisterBatch(t *testing.T) {
 	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		registered++
 		w.WriteHeader(http.StatusCreated)
-		w.Write([]byte(`{"token":"tok"}`))
+		fmt.Fprintf(w, `{"id":"user-%d","accessToken":"tok"}`, registered)
 	}))
 	defer srv.Close()
 
@@ -88,4 +91,7 @@ func TestRegistrar_RegisterBatch(t *testing.T) {
 	assert.Len(t, profiles, 4)
 	assert.Len(t, tokens, 4)
 	assert.Equal(t, 4, registered)
+	for _, p := range profiles {
+		assert.NotEmpty(t, p.UserID)
+	}
 }

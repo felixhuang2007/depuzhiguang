@@ -3,7 +3,17 @@ import jwt from 'jsonwebtoken';
 import { prisma } from '../db';
 import { config } from '../config';
 
-export async function register(username: string, email: string, password: string) {
+export async function register(
+  username: string,
+  email: string,
+  password: string,
+  opts?: {
+    nickname?: string;
+    isSimUser?: boolean;
+    simStyle?: string;
+    simPersonality?: string;
+  }
+) {
   const existing = await prisma.user.findFirst({
     where: { OR: [{ username }, { email }] },
   });
@@ -13,10 +23,34 @@ export async function register(username: string, email: string, password: string
 
   const hashedPassword = await bcrypt.hash(password, 12);
   const user = await prisma.user.create({
-    data: { username, email, password: hashedPassword },
+    data: {
+      username,
+      email,
+      password: hashedPassword,
+      nickname: opts?.nickname,
+      isSimUser: opts?.isSimUser ?? false,
+      simStyle: opts?.simStyle,
+      simPersonality: opts?.simPersonality,
+    },
   });
 
-  return { id: user.id, username: user.username };
+  const accessToken = jwt.sign({ userId: user.id }, config.JWT_SECRET as jwt.Secret, {
+    expiresIn: config.JWT_ACCESS_EXPIRY,
+  } as jwt.SignOptions);
+
+  const refreshToken = jwt.sign({ userId: user.id }, config.JWT_REFRESH_SECRET as jwt.Secret, {
+    expiresIn: config.JWT_REFRESH_EXPIRY,
+  } as jwt.SignOptions);
+
+  await prisma.refreshToken.create({
+    data: {
+      token: refreshToken,
+      userId: user.id,
+      expiresAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
+    },
+  });
+
+  return { id: user.id, username: user.username, accessToken, refreshToken };
 }
 
 export async function login(username: string, password: string) {

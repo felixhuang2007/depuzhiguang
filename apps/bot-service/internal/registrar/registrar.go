@@ -11,6 +11,7 @@ import (
 )
 
 type SimProfile struct {
+	UserID      string `json:"userId"`
 	Username    string `json:"username"`
 	Email       string `json:"email"`
 	Password    string `json:"password"`
@@ -55,20 +56,23 @@ func GenerateProfile(index int, style string) SimProfile {
 	}
 }
 
-func (r *Registrar) RegisterUser(profile SimProfile) (string, error) {
+func (r *Registrar) RegisterUser(profile SimProfile) (string, string, error) {
 	payload, err := json.Marshal(map[string]interface{}{
-		"username": profile.Username,
-		"email":    profile.Email,
-		"password": profile.Password,
-		"nickname": profile.Nickname,
+		"username":    profile.Username,
+		"email":       profile.Email,
+		"password":    profile.Password,
+		"nickname":    profile.Nickname,
+		"isSimUser":   true,
+		"simStyle":    profile.Style,
+		"initialGold": profile.InitialGold,
 	})
 	if err != nil {
-		return "", fmt.Errorf("marshal payload: %w", err)
+		return "", "", fmt.Errorf("marshal payload: %w", err)
 	}
 
 	resp, err := r.client.Post(r.apiBaseURL+"/api/auth/register", "application/json", bytes.NewReader(payload))
 	if err != nil {
-		return "", fmt.Errorf("register request failed: %w", err)
+		return "", "", fmt.Errorf("register request failed: %w", err)
 	}
 	defer resp.Body.Close()
 
@@ -76,44 +80,48 @@ func (r *Registrar) RegisterUser(profile SimProfile) (string, error) {
 		return r.loginUser(profile)
 	}
 	if resp.StatusCode != http.StatusCreated && resp.StatusCode != http.StatusOK {
-		return "", fmt.Errorf("register returned status %d", resp.StatusCode)
+		return "", "", fmt.Errorf("register returned status %d", resp.StatusCode)
 	}
 
 	var result struct {
-		Token string `json:"token"`
+		ID          string `json:"id"`
+		AccessToken string `json:"accessToken"`
 	}
 	if err := json.NewDecoder(resp.Body).Decode(&result); err != nil {
-		return "", fmt.Errorf("decode register response: %w", err)
+		return "", "", fmt.Errorf("decode register response: %w", err)
 	}
-	return result.Token, nil
+	return result.ID, result.AccessToken, nil
 }
 
-func (r *Registrar) loginUser(profile SimProfile) (string, error) {
+func (r *Registrar) loginUser(profile SimProfile) (string, string, error) {
 	payload, err := json.Marshal(map[string]interface{}{
 		"username": profile.Username,
 		"password": profile.Password,
 	})
 	if err != nil {
-		return "", fmt.Errorf("marshal payload: %w", err)
+		return "", "", fmt.Errorf("marshal payload: %w", err)
 	}
 
 	resp, err := r.client.Post(r.apiBaseURL+"/api/auth/login", "application/json", bytes.NewReader(payload))
 	if err != nil {
-		return "", fmt.Errorf("login request failed: %w", err)
+		return "", "", fmt.Errorf("login request failed: %w", err)
 	}
 	defer resp.Body.Close()
 
 	if resp.StatusCode != http.StatusOK {
-		return "", fmt.Errorf("login returned status %d", resp.StatusCode)
+		return "", "", fmt.Errorf("login returned status %d", resp.StatusCode)
 	}
 
 	var result struct {
 		AccessToken string `json:"accessToken"`
+		User        struct {
+			ID string `json:"id"`
+		} `json:"user"`
 	}
 	if err := json.NewDecoder(resp.Body).Decode(&result); err != nil {
-		return "", fmt.Errorf("decode login response: %w", err)
+		return "", "", fmt.Errorf("decode login response: %w", err)
 	}
-	return result.AccessToken, nil
+	return result.User.ID, result.AccessToken, nil
 }
 
 func (r *Registrar) RegisterBatch(count int) ([]SimProfile, []string, error) {
@@ -128,10 +136,11 @@ func (r *Registrar) RegisterBatch(count int) ([]SimProfile, []string, error) {
 	for i := 0; i < count; i++ {
 		style := personas[i%len(personas)]
 		profiles[i] = GenerateProfile(i, style)
-		token, err := r.RegisterUser(profiles[i])
+		userID, token, err := r.RegisterUser(profiles[i])
 		if err != nil {
 			return nil, nil, fmt.Errorf("register user %d: %w", i, err)
 		}
+		profiles[i].UserID = userID
 		tokens[i] = token
 		time.Sleep(100 * time.Millisecond) // Rate limit friendly
 	}
