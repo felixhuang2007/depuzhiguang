@@ -11,6 +11,7 @@ import (
 // TableManager manages all active poker tables and routes WebSocket messages to games.
 type TableManager struct {
 	hub    *Hub
+	lobby  *LobbyManager
 	tables map[string]*tableManagerEntry
 	mu     sync.RWMutex
 	logg   *slog.Logger
@@ -28,6 +29,11 @@ func NewTableManager(hub *Hub, logg *slog.Logger) *TableManager {
 		tables: make(map[string]*tableManagerEntry),
 		logg:   logg,
 	}
+}
+
+// SetLobby sets the lobby manager for broadcasting table updates.
+func (tm *TableManager) SetLobby(lobby *LobbyManager) {
+	tm.lobby = lobby
 }
 
 // CreateTable creates a new table with the given configuration.
@@ -144,6 +150,10 @@ func (tm *TableManager) HandleJoin(payload JoinTablePayload) error {
 		}
 	}
 
+	if tm.lobby != nil {
+		go tm.lobby.BroadcastTablesUpdate()
+	}
+
 	return nil
 }
 
@@ -175,6 +185,10 @@ func (tm *TableManager) HandleLeave(payload LeaveTablePayload) error {
 			PlayerID: payload.PlayerID,
 		},
 	})
+
+	if tm.lobby != nil {
+		go tm.lobby.BroadcastTablesUpdate()
+	}
 
 	return nil
 }

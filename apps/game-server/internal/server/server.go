@@ -33,6 +33,7 @@ func NewServer(addr string, apiBaseURL string, logg *slog.Logger) *Server {
 	hub := NewHub(logg)
 	tm := NewTableManager(hub, logg)
 	lobby := NewLobbyManager(tm, logg)
+	tm.SetLobby(lobby)
 	mux := http.NewServeMux()
 
 	s := &Server{
