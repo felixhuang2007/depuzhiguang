@@ -8,10 +8,24 @@ import handRoutes from './routes/hands';
 import paymentRoutes from './routes/payments';
 import simRoutes from './routes/sim';
 import { errorHandler } from './middleware/error';
+import { logger } from './logger';
 
 const app = express();
 
 app.use(express.json());
+
+app.use((req, res, next) => {
+  const start = Date.now();
+  res.on('finish', () => {
+    logger.info('http_request', {
+      method: req.method,
+      path: req.originalUrl,
+      status: res.statusCode,
+      duration_ms: Date.now() - start,
+    });
+  });
+  next();
+});
 
 app.use('/auth', authRoutes);
 app.use('/users', userRoutes);

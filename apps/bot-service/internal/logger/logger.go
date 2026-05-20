@@ -11,8 +11,13 @@ import (
 // New creates a structured JSON logger that writes to both stdout and a rotating
 // log file via lumberjack. The service name is included in every log entry.
 func New(service string) *slog.Logger {
+	logPath := os.Getenv("LOG_FILE")
+	if logPath == "" {
+		logPath = "/app/logs/service.log"
+	}
+
 	fileWriter := &lumberjack.Logger{
-		Filename:   "/app/logs/service.log",
+		Filename:   logPath,
 		MaxSize:    100, // megabytes
 		MaxBackups: 10,
 		MaxAge:     30, // days
