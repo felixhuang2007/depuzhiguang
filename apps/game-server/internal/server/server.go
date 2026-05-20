@@ -23,6 +23,7 @@ var upgrader = websocket.Upgrader{
 type Server struct {
 	hub    *Hub
 	tm     *TableManager
+	lobby  *LobbyManager
 	server *http.Server
 	logg   *slog.Logger
 }
@@ -31,12 +32,14 @@ type Server struct {
 func NewServer(addr string, apiBaseURL string, logg *slog.Logger) *Server {
 	hub := NewHub(logg)
 	tm := NewTableManager(hub, logg)
+	lobby := NewLobbyManager(tm, logg)
 	mux := http.NewServeMux()
 
 	s := &Server{
-		hub:  hub,
-		tm:   tm,
-		logg: logg,
+		hub:   hub,
+		tm:    tm,
+		lobby: lobby,
+		logg:  logg,
 		server: &http.Server{
 			Addr:    addr,
 			Handler: mux,
@@ -45,6 +48,8 @@ func NewServer(addr string, apiBaseURL string, logg *slog.Logger) *Server {
 
 	mux.HandleFunc("/health", s.healthHandler)
 	mux.HandleFunc("/ws", s.wsHandler)
+	mux.HandleFunc("/lobby/tables", s.lobby.TablesHandler)
+	mux.HandleFunc("/ws/lobby", s.lobby.WSHandler)
 
 	// Create default test table
 	if _, err := tm.CreateTable(table.TableConfig{

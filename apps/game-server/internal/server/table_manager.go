@@ -60,6 +60,31 @@ func (tm *TableManager) GetTable(tableID string) (*table.Table, bool) {
 	return entry.Table, true
 }
 
+// GetTableList returns a list of all tables with their public metadata.
+func (tm *TableManager) GetTableList() []TableInfo {
+	tm.mu.RLock()
+	defer tm.mu.RUnlock()
+
+	result := make([]TableInfo, 0, len(tm.tables))
+	for id, entry := range tm.tables {
+		t := entry.Table
+		status := "waiting"
+		if entry.Game != nil {
+			status = "playing"
+		}
+		result = append(result, TableInfo{
+			ID:         id,
+			Name:       t.Config.Name,
+			MaxSeats:   t.Config.MaxSeats,
+			Occupied:   t.PlayerCount(),
+			SmallBlind: t.Config.SmallBlind,
+			BigBlind:   t.Config.BigBlind,
+			Status:     status,
+		})
+	}
+	return result
+}
+
 // HandleJoin processes a player joining a table.
 func (tm *TableManager) HandleJoin(payload JoinTablePayload) error {
 	tm.mu.Lock()
