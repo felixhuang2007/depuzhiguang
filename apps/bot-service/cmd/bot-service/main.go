@@ -2,18 +2,20 @@ package main
 
 import (
 	"flag"
-	"log"
 	"os"
 	"os/signal"
 	"syscall"
 
 	"github.com/depuzhiguang/bot-service/internal/ai"
+	"github.com/depuzhiguang/bot-service/internal/logger"
 	"github.com/depuzhiguang/bot-service/internal/manager"
 	"github.com/depuzhiguang/bot-service/internal/registrar"
 	"github.com/depuzhiguang/bot-service/internal/scheduler"
 )
 
 func main() {
+	logg := logger.New("bot-service")
+
 	count := flag.Int("count", 20, "Number of sim users")
 	wsURL := flag.String("ws", "ws://localhost:8080/ws", "Game server WebSocket URL")
 	apiURL := flag.String("api", "http://localhost:3000", "API server base URL")
@@ -27,16 +29,17 @@ func main() {
 		*apiURL = envAPI
 	}
 
-	log.Printf("=== Simulation Service Starting ===")
-	log.Printf("Users: %d, WS: %s, API: %s, Daily Hands: %d", *count, *wsURL, *apiURL, *dailyHands)
+	logg.Info("simulation service starting")
+	logg.Info("config", "users", *count, "ws", *wsURL, "api", *apiURL, "daily_hands", *dailyHands)
 
 	// Step 1: Register users
 	reg := registrar.NewRegistrar(*apiURL)
 	profiles, _, err := reg.RegisterBatch(*count)
 	if err != nil {
-		log.Fatalf("Failed to register users: %v", err)
+		logg.Error("failed to register users", "error", err)
+		os.Exit(1)
 	}
-	log.Printf("Registered %d users", len(profiles))
+	logg.Info("registered users", "count", len(profiles))
 
 	// Step 2: Setup scheduler
 	userIDs := make([]string, len(profiles))
@@ -45,7 +48,8 @@ func main() {
 	}
 	sched, err := scheduler.NewScheduler(userIDs, 3, 5, 7)
 	if err != nil {
-		log.Fatalf("Failed to create scheduler: %v", err)
+		logg.Error("failed to create scheduler", "error", err)
+		os.Exit(1)
 	}
 
 	// Step 3: Setup manager
@@ -64,22 +68,22 @@ func main() {
 	// Step 6: Assign to tables and start
 	tables := sched.Assign()
 	for _, table := range tables {
-		log.Printf("Table %s: %d users", table.TableID, len(table.Users))
+		logg.Info("table assigned", "table_id", table.TableID, "user_count", len(table.Users))
 		for _, uid := range table.Users {
 			if err := mgr.AssignToTable(uid, table.TableID); err != nil {
-				log.Printf("Failed to assign %s to %s: %v", uid, table.TableID, err)
+				logg.Error("failed to assign user to table", "user_id", uid, "table_id", table.TableID, "error", err)
 			}
 		}
 	}
 
-	log.Printf("Simulation running. Press Ctrl+C to stop.")
+	logg.Info("simulation running", "message", "Press Ctrl+C to stop")
 
 	// Graceful shutdown
 	sigCh := make(chan os.Signal, 1)
 	signal.Notify(sigCh, syscall.SIGINT, syscall.SIGTERM)
 	<-sigCh
 
-	log.Println("Shutting down...")
+	logg.Info("shutting down")
 	mgr.StopAll()
-	log.Println("Done")
+	logg.Info("done")
 }
