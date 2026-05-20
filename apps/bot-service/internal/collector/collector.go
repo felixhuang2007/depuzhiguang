@@ -71,5 +71,8 @@ func (c *Collector) RecordResult(result HandResult) error {
 		return fmt.Errorf("record result failed: %w", err)
 	}
 	defer resp.Body.Close()
+	if resp.StatusCode >= 300 {
+		return fmt.Errorf("record result returned %d", resp.StatusCode)
+	}
 	return nil
 }

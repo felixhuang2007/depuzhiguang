@@ -77,11 +77,13 @@ func (m *Manager) AssignToTable(botID, tableID string) error {
 	gc := client.NewGameClient(m.wsURL, bot.Profile.ID, tableID, bot.Engine)
 	gc.SetActionCallback(func(phase, action string, amount, pot, stack int) {
 		if err := m.collector.LogAction(collector.ActionRecord{
-			UserID:  bot.Profile.ID,
-			TableID: tableID,
-			Phase:   phase,
-			Action:  action,
-			Amount:  amount,
+			UserID:      bot.Profile.ID,
+			TableID:     tableID,
+			Phase:       phase,
+			Action:      action,
+			Amount:      amount,
+			PotBefore:   pot,
+			StackBefore: stack,
 		}); err != nil {
 			log.Printf("[%s] Failed to log action: %v", bot.Profile.ID, err)
 		}
