@@ -40,6 +40,8 @@ func NewManager(wsURL, apiURL string) *Manager {
 }
 
 func (m *Manager) Spawn(count int) {
+	m.mu.Lock()
+	defer m.mu.Unlock()
 	for i := 0; i < count; i++ {
 		profile := identity.GenerateProfile(i)
 		diff := ai.Regular
@@ -62,6 +64,19 @@ func (m *Manager) Spawn(count int) {
 	}
 }
 
+func (m *Manager) RegisterBot(botID string, engine *ai.Engine) {
+	m.mu.Lock()
+	defer m.mu.Unlock()
+	ctx, cancel := context.WithCancel(context.Background())
+	m.bots[botID] = &Bot{
+		Profile: identity.Profile{ID: botID},
+		Engine:  engine,
+		Status:  "idle",
+		ctx:     ctx,
+		cancel:  cancel,
+	}
+}
+
 func (m *Manager) AssignToTable(botID, tableID string) error {
 	m.mu.Lock()
 	defer m.mu.Unlock()
@@ -71,6 +86,13 @@ func (m *Manager) AssignToTable(botID, tableID string) error {
 	}
 	bot.TableID = tableID
 	bot.Status = "playing"
+
+	// Check for duplicates before appending
+	for _, existingID := range m.tables[tableID] {
+		if existingID == botID {
+			return nil // already assigned
+		}
+	}
 	m.tables[tableID] = append(m.tables[tableID], botID)
 
 	// Create and connect WebSocket client
