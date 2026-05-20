@@ -114,4 +114,40 @@ router.get('/anomalies', async (req, res, next) => {
   }
 });
 
+// POST /api/sim/refill - Refill sim user gold
+router.post('/refill', async (req, res, next) => {
+  try {
+    const { user_id } = req.body;
+    if (!user_id) {
+      res.status(400).json({ error: 'user_id required' });
+      return;
+    }
+
+    const user = await prisma.user.findUnique({ where: { id: user_id } });
+    if (!user) {
+      res.status(404).json({ error: 'user not found' });
+      return;
+    }
+    if (!user.isSimUser) {
+      res.status(403).json({ error: 'only sim users can be refilled' });
+      return;
+    }
+
+    const MIN_BUYIN = 500;
+    if (user.gold >= MIN_BUYIN) {
+      res.status(200).json({ id: user.id, gold: user.gold, refilled: false });
+      return;
+    }
+
+    const updated = await prisma.user.update({
+      where: { id: user_id },
+      data: { gold: 10000 },
+    });
+
+    res.json({ id: updated.id, gold: updated.gold, refilled: true });
+  } catch (err) {
+    next(err);
+  }
+});
+
 export default router;
