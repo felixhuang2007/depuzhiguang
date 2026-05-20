@@ -13,13 +13,13 @@ type Entry struct {
 }
 
 type Leaderboard struct {
-	data map[string]map[string]*Entry // metric -> userId -> entry
+	data map[string]map[string]Entry // metric -> userId -> entry
 	mu   sync.RWMutex
 }
 
 func NewLeaderboard() *Leaderboard {
 	return &Leaderboard{
-		data: make(map[string]map[string]*Entry),
+		data: make(map[string]map[string]Entry),
 	}
 }
 
@@ -28,26 +28,13 @@ func (lb *Leaderboard) Update(userID, username, metric string, delta float64) {
 	defer lb.mu.Unlock()
 
 	if lb.data[metric] == nil {
-		lb.data[metric] = make(map[string]*Entry)
+		lb.data[metric] = make(map[string]Entry)
 	}
-	if lb.data[metric][userID] == nil {
-		lb.data[metric][userID] = &Entry{UserID: userID, Username: username}
-	}
-	lb.data[metric][userID].Value += delta
-	lb.recalc(metric)
-}
-
-func (lb *Leaderboard) recalc(metric string) {
-	entries := make([]*Entry, 0, len(lb.data[metric]))
-	for _, e := range lb.data[metric] {
-		entries = append(entries, e)
-	}
-	sort.Slice(entries, func(i, j int) bool {
-		return entries[i].Value > entries[j].Value
-	})
-	for i, e := range entries {
-		e.Rank = i + 1
-	}
+	entry := lb.data[metric][userID]
+	entry.UserID = userID
+	entry.Username = username
+	entry.Value += delta
+	lb.data[metric][userID] = entry
 }
 
 func (lb *Leaderboard) GetRanking(metric string) []*Entry {
@@ -56,15 +43,14 @@ func (lb *Leaderboard) GetRanking(metric string) []*Entry {
 
 	entries := make([]*Entry, 0, len(lb.data[metric]))
 	for _, e := range lb.data[metric] {
-		entries = append(entries, &Entry{
-			UserID:   e.UserID,
-			Username: e.Username,
-			Value:    e.Value,
-			Rank:     e.Rank,
-		})
+		cp := e
+		entries = append(entries, &cp)
 	}
 	sort.Slice(entries, func(i, j int) bool {
 		return entries[i].Value > entries[j].Value
 	})
+	for i, e := range entries {
+		e.Rank = i + 1
+	}
 	return entries
 }
