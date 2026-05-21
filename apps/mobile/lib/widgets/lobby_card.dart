@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 import '../theme.dart';
 import '../models/table_info.dart';
 
@@ -10,6 +11,7 @@ class LobbyCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     final isFull = table.isFull;
     final isAlmostFull = !isFull && table.currentPlayers >= table.maxPlayers - 1;
 
@@ -80,7 +82,7 @@ class LobbyCard extends StatelessWidget {
                       ),
                       const SizedBox(width: 4),
                       Text(
-                        isFull ? '满员' : '在线',
+                        isFull ? l10n.full : l10n.online,
                         style: TextStyle(fontSize: 9, color: dotColor),
                       ),
                     ],
@@ -101,13 +103,13 @@ class LobbyCard extends StatelessWidget {
                       Text('·', style: TextStyle(fontSize: 11, color: AppColors.textMuted.withOpacity(0.5))),
                       const SizedBox(width: 6),
                       Text(
-                        '上限 ${table.limit}',
+                        '${l10n.limit} ${table.limit}',
                         style: const TextStyle(fontSize: 11, color: AppColors.textMuted),
                       ),
                     ],
                   ),
                   Text(
-                    '${table.currentPlayers}/${table.maxPlayers} 人',
+                    '${table.currentPlayers}/${table.maxPlayers} ${l10n.players}',
                     style: TextStyle(
                       fontSize: 11,
                       fontWeight: FontWeight.bold,
