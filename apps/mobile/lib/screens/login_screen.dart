@@ -91,7 +91,7 @@ class _LoginScreenState extends State<LoginScreen> {
                         ),
                         const SizedBox(height: 8),
                         // Subtitle
-                        Text(
+                        const Text(
                           'MYANMAR TEXAS HOLD\'EM',
                           style: TextStyle(
                             fontSize: 12,
@@ -276,6 +276,13 @@ class _LoginScreenState extends State<LoginScreen> {
         ),
       ),
     );
+  }
+
+  @override
+  void dispose() {
+    _usernameCtrl.dispose();
+    _passwordCtrl.dispose();
+    super.dispose();
   }
 }
 
