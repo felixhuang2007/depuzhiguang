@@ -71,9 +71,10 @@ class TableBloc extends Bloc<TableEvent, TableState> {
   void _onConnect(TableConnect event, Emitter<TableState> emit) {
     emit(TableConnecting());
     _repo.connect(event.wsUrl, event.tableId, event.token);
-    _stateSub = _repo.stateStream.listen((msg) {
-      add(TableGameStateUpdated(msg));
-    });
+    _stateSub = _repo.stateStream.listen(
+      (msg) => add(TableGameStateUpdated(msg)),
+      onError: (error) => emit(TableError(error.toString())),
+    );
     emit(TableConnected());
   }
 
