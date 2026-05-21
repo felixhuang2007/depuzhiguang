@@ -12,6 +12,13 @@ class RankingScreen extends StatefulWidget {
 class _RankingScreenState extends State<RankingScreen> {
   int _tab = 0;
 
+  static const _rankRows = [
+    _RankRow(rank: 4, emoji: '👩‍🎤', name: '脆皮五华', value: '65.8万', isMe: false),
+    _RankRow(rank: 5, emoji: '🧔', name: '见南山', value: '58.3万', isMe: false),
+    _RankRow(rank: 8, emoji: '👩', name: '静牌', value: '35.2万', isMe: false),
+    _RankRow(rank: 12, emoji: '👤', name: 'hch2003 (我)', value: '12.4万', isMe: true),
+  ];
+
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
@@ -78,17 +85,9 @@ class _RankingScreenState extends State<RankingScreen> {
         Expanded(
           child: ListView.separated(
             padding: const EdgeInsets.symmetric(horizontal: 8),
-            itemCount: 4,
+            itemCount: _rankRows.length,
             separatorBuilder: (_, __) => const SizedBox(height: 4),
-            itemBuilder: (context, i) {
-              final items = [
-                const _RankRow(rank: 4, emoji: '👩‍🎤', name: '脆皮五华', value: '65.8万', isMe: false),
-                const _RankRow(rank: 5, emoji: '🧔', name: '见南山', value: '58.3万', isMe: false),
-                const _RankRow(rank: 8, emoji: '👩', name: '静牌', value: '35.2万', isMe: false),
-                const _RankRow(rank: 12, emoji: '👤', name: 'hch2003 (我)', value: '12.4万', isMe: true),
-              ];
-              return items[i];
-            },
+            itemBuilder: (context, i) => _rankRows[i],
           ),
         ),
       ],

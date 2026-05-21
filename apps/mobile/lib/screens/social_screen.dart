@@ -12,6 +12,28 @@ class SocialScreen extends StatefulWidget {
 class _SocialScreenState extends State<SocialScreen> {
   int _tab = 0;
 
+  static const _messages = [
+    _MessageItem(
+      emoji: '🧔',
+      name: '柒少',
+      message: '在吗？今晚一起开桌？',
+      time: '10:23',
+      unread: 2,
+    ),
+    _MessageItem(
+      emoji: '👩‍🎤',
+      name: '脆皮五华',
+      message: '哈哈，那把牌太刺激了',
+      time: '昨天',
+    ),
+    _MessageItem(
+      emoji: '🦈',
+      name: '超哥',
+      message: '明天下午有局，来吗？',
+      time: '周一',
+    ),
+  ];
+
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
@@ -63,32 +85,9 @@ class _SocialScreenState extends State<SocialScreen> {
         Expanded(
           child: ListView.separated(
             padding: const EdgeInsets.all(8),
-            itemCount: 3,
+            itemCount: _messages.length,
             separatorBuilder: (_, __) => const SizedBox(height: 6),
-            itemBuilder: (context, i) {
-              final items = [
-                const _MessageItem(
-                  emoji: '🧔',
-                  name: '柒少',
-                  message: '在吗？今晚一起开桌？',
-                  time: '10:23',
-                  unread: 2,
-                ),
-                const _MessageItem(
-                  emoji: '👩‍🎤',
-                  name: '脆皮五华',
-                  message: '哈哈，那把牌太刺激了',
-                  time: '昨天',
-                ),
-                const _MessageItem(
-                  emoji: '🦈',
-                  name: '超哥',
-                  message: '明天下午有局，来吗？',
-                  time: '周一',
-                ),
-              ];
-              return items[i];
-            },
+            itemBuilder: (context, i) => _messages[i],
           ),
         ),
       ],
