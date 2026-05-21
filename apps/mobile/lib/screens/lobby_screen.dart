@@ -1,5 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_gen/gen_l10n/app_localizations.dart';
+import '../blocs/lobby_bloc.dart';
+import '../theme.dart';
+import '../widgets/lobby_card.dart';
 import 'table_screen.dart';
 
 class LobbyScreen extends StatelessWidget {
@@ -8,106 +12,113 @@ class LobbyScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
-    return Scaffold(
-      appBar: AppBar(
-        title: Text(l10n.lobby),
-        actions: [
-          IconButton(icon: const Icon(Icons.person), onPressed: () {}),
-          IconButton(icon: const Icon(Icons.settings), onPressed: () {}),
-        ],
+    return BlocProvider(
+      create: (_) => LobbyBloc()..add(LobbyLoadRequested()),
+      child: BlocBuilder<LobbyBloc, LobbyState>(
+        builder: (context, state) {
+          return Column(
+            children: [
+              // Filter tabs
+              _FilterTabs(l10n: l10n),
+              const SizedBox(height: 8),
+              // Table list
+              Expanded(
+                child: _buildBody(context, state, l10n),
+              ),
+            ],
+          );
+        },
       ),
-      body: ListView(
-        padding: const EdgeInsets.all(16),
-        children: [
-          _Section(title: l10n.cashGame, children: [
-            _TableCard(stakes: '1/2', players: '3/9', bb: '10', onTap: () => _joinTable(context)),
-            _TableCard(stakes: '5/10', players: '6/9', bb: '50', onTap: () => _joinTable(context)),
-            _TableCard(stakes: '25/50', players: '2/6', bb: '250', onTap: () => _joinTable(context)),
-          ]),
-          _Section(title: l10n.tournament, children: [
-            _TournamentCard(name: 'Daily 10K', buyIn: '1,000', entrants: '45/100'),
-            _TournamentCard(name: 'Weekly 100K', buyIn: '10,000', entrants: '120/500'),
-          ]),
-          _Section(title: l10n.club, children: [
-            ListTile(
-              leading: const Icon(Icons.group),
-              title: const Text('My Clubs'),
-              trailing: const Icon(Icons.chevron_right),
-              onTap: () {},
+    );
+  }
+
+  Widget _buildBody(BuildContext context, LobbyState state, AppLocalizations l10n) {
+    if (state is LobbyLoading) {
+      return const Center(
+        child: CircularProgressIndicator(color: AppColors.gold),
+      );
+    }
+    if (state is LobbyError) {
+      return Center(
+        child: Text(state.message, style: const TextStyle(color: AppColors.goldBright)),
+      );
+    }
+    if (state is LobbyLoaded) {
+      return ListView.separated(
+        padding: const EdgeInsets.all(12),
+        itemCount: state.tables.length,
+        separatorBuilder: (_, __) => const SizedBox(height: 8),
+        itemBuilder: (context, i) {
+          final table = state.tables[i];
+          return LobbyCard(
+            table: table,
+            onTap: () => Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (_) => TableScreen(tableId: table.id),
+              ),
             ),
-          ]),
-        ],
-      ),
-    );
-  }
-
-  void _joinTable(BuildContext context) {
-    Navigator.push(
-      context,
-      MaterialPageRoute(builder: (_) => const TableScreen(tableId: 'table_1')),
-    );
+          );
+        },
+      );
+    }
+    return const SizedBox.shrink();
   }
 }
 
-class _Section extends StatelessWidget {
-  final String title;
-  final List<Widget> children;
-  const _Section({required this.title, required this.children});
+class _FilterTabs extends StatelessWidget {
+  final AppLocalizations l10n;
+  const _FilterTabs({required this.l10n});
 
   @override
   Widget build(BuildContext context) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Padding(
-          padding: const EdgeInsets.symmetric(vertical: 12),
-          child: Text(title, style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
-        ),
-        ...children,
-        const SizedBox(height: 16),
-      ],
-    );
-  }
-}
+    final filters = [
+      ('cash', l10n.cashGame),
+      ('sng', l10n.sng),
+      ('tournament', l10n.tournament),
+      ('training', l10n.training),
+    ];
 
-class _TableCard extends StatelessWidget {
-  final String stakes;
-  final String players;
-  final String bb;
-  final VoidCallback onTap;
-
-  const _TableCard({required this.stakes, required this.players, required this.bb, required this.onTap});
-
-  @override
-  Widget build(BuildContext context) {
-    return Card(
-      child: ListTile(
-        leading: const Icon(Icons.casino),
-        title: Text('$stakes BB'),
-        subtitle: Text('$players players'),
-        trailing: Text('$bb BB'),
-        onTap: onTap,
-      ),
-    );
-  }
-}
-
-class _TournamentCard extends StatelessWidget {
-  final String name;
-  final String buyIn;
-  final String entrants;
-
-  const _TournamentCard({required this.name, required this.buyIn, required this.entrants});
-
-  @override
-  Widget build(BuildContext context) {
-    return Card(
-      child: ListTile(
-        leading: const Icon(Icons.emoji_events),
-        title: Text(name),
-        subtitle: Text('Buy-in: $buyIn Gold'),
-        trailing: Text(entrants),
-      ),
+    return BlocBuilder<LobbyBloc, LobbyState>(
+      builder: (context, state) {
+        final active = state is LobbyLoaded ? state.activeFilter : 'cash';
+        return Container(
+          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
+          color: AppColors.bg,
+          child: SingleChildScrollView(
+            scrollDirection: Axis.horizontal,
+            child: Row(
+              children: filters.map((f) {
+                final isActive = f.$1 == active;
+                return Padding(
+                  padding: const EdgeInsets.only(right: 6),
+                  child: GestureDetector(
+                    onTap: () => context.read<LobbyBloc>().add(LobbyFilterChanged(f.$1)),
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 5),
+                      decoration: BoxDecoration(
+                        color: isActive ? AppColors.foldRed : AppColors.surface.withOpacity(0.6),
+                        borderRadius: BorderRadius.circular(14),
+                        border: Border.all(
+                          color: isActive ? AppColors.gold : AppColors.gold.withOpacity(0.3),
+                        ),
+                      ),
+                      child: Text(
+                        f.$2,
+                        style: TextStyle(
+                          fontSize: 11,
+                          color: isActive ? AppColors.goldBright : AppColors.textMuted,
+                          fontWeight: isActive ? FontWeight.bold : FontWeight.normal,
+                        ),
+                      ),
+                    ),
+                  ),
+                );
+              }).toList(),
+            ),
+          ),
+        );
+      },
     );
   }
 }
