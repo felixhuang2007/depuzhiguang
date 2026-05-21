@@ -36,6 +36,7 @@ dependencies:
   web_socket_channel: ^3.0.0
   http: ^1.2.0
   shared_preferences: ^2.2.3
+  flutter_bloc: ^8.1.5
 
   cupertino_icons: ^1.0.6
 
