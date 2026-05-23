@@ -56,45 +56,249 @@ class _TableViewState extends State<_TableView> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: Container(
-        color: AppColors.bg,
-        child: SafeArea(
-          child: Stack(
-            children: [
-              // Green felt
-              Positioned.fill(
-                child: Container(
-                  margin: const EdgeInsets.only(top: 0, bottom: 0),
-                  decoration: const BoxDecoration(
-                    gradient: RadialGradient(
-                      center: Alignment(0, -0.1),
-                      radius: 0.8,
-                      colors: [
-                        AppColors.feltLight,
-                        Color(0xFF1e6b42),
-                        AppColors.feltDark,
-                      ],
-                      stops: [0.0, 0.4, 1.0],
-                    ),
+      body: OrientationBuilder(
+        builder: (context, orientation) {
+          return orientation == Orientation.portrait
+              ? _buildPortrait(context)
+              : _buildLandscape(context);
+        },
+      ),
+    );
+  }
+
+  Widget _buildPortrait(BuildContext context) {
+    return Container(
+      color: AppColors.bg,
+      child: SafeArea(
+        child: Stack(
+          children: [
+            // Green felt
+            Positioned.fill(
+              child: Container(
+                margin: const EdgeInsets.only(top: 0, bottom: 0),
+                decoration: const BoxDecoration(
+                  gradient: RadialGradient(
+                    center: Alignment(0, -0.1),
+                    radius: 0.8,
+                    colors: [
+                      AppColors.feltLight,
+                      Color(0xFF1e6b42),
+                      AppColors.feltDark,
+                    ],
+                    stops: [0.0, 0.4, 1.0],
                   ),
                 ),
               ),
-              // Players positioned
-              ..._buildPlayers(),
-              // Pot info
-              _buildPotInfo(),
-              // Community cards
-              _buildCommunityCards(),
-              // Hero area
-              _buildHero(),
-              // Action buttons
-              _buildActionButtons(),
-              // Toolbar
-              _buildToolbar(),
-            ],
-          ),
+            ),
+            // Players positioned
+            ..._buildPlayers(),
+            // Pot info
+            _buildPotInfo(),
+            // Community cards
+            _buildCommunityCards(),
+            // Hero area
+            _buildHero(),
+            // Action buttons
+            _buildActionButtons(),
+            // Toolbar
+            _buildToolbar(),
+          ],
         ),
       ),
+    );
+  }
+
+  Widget _buildLandscape(BuildContext context) {
+    return Container(
+      color: AppColors.bg,
+      child: SafeArea(
+        child: Stack(
+          children: [
+            // Green felt
+            Positioned.fill(
+              child: Container(
+                margin: const EdgeInsets.all(8),
+                decoration: const BoxDecoration(
+                  gradient: RadialGradient(
+                    center: Alignment(0, 0),
+                    radius: 0.9,
+                    colors: [
+                      AppColors.feltLight,
+                      Color(0xFF1e6b42),
+                      AppColors.feltDark,
+                    ],
+                    stops: [0.0, 0.4, 1.0],
+                  ),
+                ),
+              ),
+            ),
+            // Top row: 4 players
+            Positioned(
+              top: 8,
+              left: 0,
+              right: 0,
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                children: _players
+                    .where((p) => [0, 1, 7, 8].contains(p.seat))
+                    .map((p) => _PlayerWidget(player: p))
+                    .toList(),
+              ),
+            ),
+            // Left side
+            Positioned(
+              left: 8,
+              top: 80,
+              bottom: 80,
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: _players
+                    .where((p) => p.seat == 6)
+                    .map((p) => _PlayerWidget(player: p))
+                    .toList(),
+              ),
+            ),
+            // Right side
+            Positioned(
+              right: 8,
+              top: 80,
+              bottom: 80,
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: _players
+                    .where((p) => [2, 3].contains(p.seat))
+                    .map((p) => _PlayerWidget(player: p))
+                    .toList(),
+              ),
+            ),
+            // Center: pot + cards
+            Positioned(
+              top: 0,
+              bottom: 0,
+              left: 80,
+              right: 80,
+              child: Center(
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 3),
+                      decoration: BoxDecoration(
+                        color: AppColors.surface.withOpacity(0.8),
+                        borderRadius: BorderRadius.circular(10),
+                        border: Border.all(color: AppColors.gold),
+                      ),
+                      child: const Text(
+                        '底池: 5.3BB',
+                        style: TextStyle(fontSize: 10, fontWeight: FontWeight.bold, color: AppColors.goldBright),
+                      ),
+                    ),
+                    const SizedBox(height: 8),
+                    Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        ..._community.map((c) => Padding(
+                          padding: const EdgeInsets.symmetric(horizontal: 2),
+                          child: PokerCardWidget(card: c, width: 22, height: 30),
+                        )),
+                        ...List.generate(2, (_) => const Padding(
+                          padding: EdgeInsets.symmetric(horizontal: 2),
+                          child: PokerCardWidget(faceDown: true, width: 22, height: 30),
+                        )),
+                      ],
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      '5/10 · 上限5000 · 第 128 手',
+                      style: TextStyle(fontSize: 8, color: AppColors.gold.withOpacity(0.6)),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+            // Bottom: hero + actions
+            Positioned(
+              bottom: 8,
+              left: 16,
+              child: _buildLandscapeHero(),
+            ),
+            // Right side actions
+            Positioned(
+              bottom: 8,
+              right: 16,
+              child: Row(
+                children: [
+                  ActionButton(label: '弃牌', icon: Icons.close, bgColor: AppColors.foldRed, size: 32, onTap: () {}),
+                  const SizedBox(width: 6),
+                  ActionButton(label: '加分', text: '+', bgColor: AppColors.raiseNavy, size: 34, onTap: () {}),
+                  const SizedBox(width: 6),
+                  ActionButton(label: '跟分', text: '2BB', bgColor: AppColors.callGreen, size: 32, onTap: () {}),
+                ],
+              ),
+            ),
+            // Toolbar
+            _buildToolbar(),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildLandscapeHero() {
+    final hero = _players.firstWhere((p) => p.seat == 9);
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              hero.name,
+              style: const TextStyle(
+                fontSize: 10,
+                fontWeight: FontWeight.bold,
+                color: AppColors.goldBright,
+                shadows: [
+                  Shadow(color: AppColors.gold, blurRadius: 8),
+                ],
+              ),
+            ),
+            const SizedBox(height: 2),
+            Row(
+              children: [
+                PlayerAvatar(
+                  emoji: '👤',
+                  isActive: hero.isActive,
+                  timerText: hero.isActive ? '11S' : null,
+                  size: 32,
+                ),
+                const SizedBox(width: 6),
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                  decoration: BoxDecoration(
+                    color: AppColors.surface.withOpacity(0.8),
+                    borderRadius: BorderRadius.circular(6),
+                    border: Border.all(color: AppColors.gold.withOpacity(0.3)),
+                  ),
+                  child: Text(
+                    '${hero.stack}BB',
+                    style: const TextStyle(fontSize: 8, color: AppColors.goldBright),
+                  ),
+                ),
+              ],
+            ),
+          ],
+        ),
+        const SizedBox(width: 8),
+        if (hero.holeCards != null)
+          Row(
+            children: hero.holeCards!.map((c) => Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 2),
+              child: PokerCardWidget(card: c, width: 24, height: 34),
+            )).toList(),
+          ),
+      ],
     );
   }
 
