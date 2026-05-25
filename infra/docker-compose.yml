@@ -38,8 +38,8 @@ services:
       - "3000:3000"
     environment:
       DATABASE_URL: postgresql://depg:depg_pass@postgres:5432/depg_db
-      JWT_SECRET: ${JWT_SECRET:-change-me-in-production}
-      JWT_REFRESH_SECRET: ${JWT_REFRESH_SECRET:-change-me-too}
+      JWT_SECRET: ${JWT_SECRET:-change-me-in-production-32-chars-min}
+      JWT_REFRESH_SECRET: ${JWT_REFRESH_SECRET:-change-me-too-in-production-32-chars}
       JWT_ACCESS_EXPIRY: 15m
       JWT_REFRESH_EXPIRY: 7d
       NODE_ENV: production

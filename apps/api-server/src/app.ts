@@ -27,14 +27,18 @@ app.use((req, res, next) => {
   next();
 });
 
-app.use('/auth', authRoutes);
-app.use('/users', userRoutes);
-app.use('/clubs', clubRoutes);
-app.use('/chat', chatRoutes);
-app.use('/friends', friendRoutes);
-app.use('/hands', handRoutes);
-app.use('/payments', paymentRoutes);
-app.use('/sim', simRoutes);
+app.get('/', (_req, res) => {
+  res.json({ status: 'ok', service: 'api-server', time: new Date().toISOString() });
+});
+
+app.use('/api/auth', authRoutes);
+app.use('/api/users', userRoutes);
+app.use('/api/clubs', clubRoutes);
+app.use('/api/chat', chatRoutes);
+app.use('/api/friends', friendRoutes);
+app.use('/api/hands', handRoutes);
+app.use('/api/payments', paymentRoutes);
+app.use('/api/sim', simRoutes);
 
 app.use(errorHandler);
 
