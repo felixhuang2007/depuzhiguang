@@ -7,6 +7,7 @@ import friendRoutes from './routes/friends';
 import handRoutes from './routes/hands';
 import paymentRoutes from './routes/payments';
 import simRoutes from './routes/sim';
+import tableRoutes from './routes/tables';
 import { errorHandler } from './middleware/error';
 import { logger } from './logger';
 
@@ -39,6 +40,7 @@ app.use('/api/friends', friendRoutes);
 app.use('/api/hands', handRoutes);
 app.use('/api/payments', paymentRoutes);
 app.use('/api/sim', simRoutes);
+app.use('/api/tables', tableRoutes);
 
 app.use(errorHandler);
 

@@ -61,21 +61,33 @@ class _LoginScreenState extends State<LoginScreen> {
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
                         // Brand icon / logo placeholder
-                        Container(
-                          width: 80,
-                          height: 80,
-                          decoration: BoxDecoration(
-                            shape: BoxShape.circle,
-                            border: Border.all(
-                              color: AppColors.goldBorder,
-                              width: 2,
+                        GestureDetector(
+                          onLongPress: () {
+                            _usernameCtrl.text = 'testplayer2';
+                            _passwordCtrl.text = 'Test@1234';
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              const SnackBar(
+                                content: Text('已自动填充测试账号'),
+                                duration: Duration(seconds: 1),
+                              ),
+                            );
+                          },
+                          child: Container(
+                            width: 80,
+                            height: 80,
+                            decoration: BoxDecoration(
+                              shape: BoxShape.circle,
+                              border: Border.all(
+                                color: AppColors.goldBorder,
+                                width: 2,
+                              ),
+                              color: AppColors.header,
                             ),
-                            color: AppColors.header,
-                          ),
-                          child: const Icon(
-                            Icons.casino,
-                            size: 40,
-                            color: AppColors.goldBright,
+                            child: const Icon(
+                              Icons.casino,
+                              size: 40,
+                              color: AppColors.goldBright,
+                            ),
                           ),
                         ),
                         const SizedBox(height: 24),

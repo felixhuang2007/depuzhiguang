@@ -39,6 +39,8 @@ model User {
   receivedFriendRequests Friend[] @relation("FriendUsers")
   simActions             SimAction[]
   simLeaderboards        SimLeaderboard[]
+  tablePlayers           TablePlayer[]
+  exchangeRecords        ExchangeRecord[]
 
   @@map("users")
 }
@@ -205,4 +207,35 @@ model SimAnomaly {
 
   @@index([type, detectedAt])
   @@map("sim_anomalies")
+}
+
+model TablePlayer {
+  id        String    @id @default(uuid())
+  tableId   String    @map("table_id")
+  userId    String    @map("user_id")
+  seat      Int
+  chips     Int       @default(0)
+  status    String    @default("active")
+  createdAt DateTime  @default(now()) @map("created_at")
+  leftAt    DateTime? @map("left_at")
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([tableId, seat])
+  @@unique([tableId, userId])
+  @@map("table_players")
+}
+
+model ExchangeRecord {
+  id          String   @id @default(uuid())
+  userId      String   @map("user_id")
+  tableId     String   @map("table_id")
+  type        String
+  goldAmount  Int      @map("gold_amount")
+  chipsAmount Int      @map("chips_amount")
+  createdAt   DateTime @default(now()) @map("created_at")
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("exchange_records")
 }

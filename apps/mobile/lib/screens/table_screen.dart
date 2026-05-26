@@ -3,7 +3,10 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import '../blocs/table_bloc.dart';
 import '../models/card.dart';
 import '../models/player.dart';
+import '../repositories/auth_repository.dart';
 import '../theme.dart';
+import '../widgets/join_table_dialog.dart';
+import '../widgets/leave_table_dialog.dart';
 import '../widgets/poker_card_widget.dart';
 import '../widgets/player_avatar.dart';
 import '../widgets/action_button.dart';
@@ -15,38 +18,21 @@ class TableScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return BlocProvider(
-      create: (_) => TableBloc()
-        ..add(TableConnect(
-          'ws://localhost:8080/ws',
-          tableId,
-          'mock_token',
-        )),
-      child: const _TableView(),
+      create: (_) => TableBloc(),
+      child: _TableView(tableId: tableId),
     );
   }
 }
 
 class _TableView extends StatefulWidget {
-  const _TableView();
+  final String tableId;
+  const _TableView({required this.tableId});
 
   @override
   State<_TableView> createState() => _TableViewState();
 }
 
 class _TableViewState extends State<_TableView> {
-  // Mock players for UI demo
-  final _players = [
-    const Player(id: 'p1', name: '柒少', stack: 239.5, seat: 0, isDealer: true),
-    const Player(id: 'p2', name: '静牌', stack: 32.8, seat: 1),
-    const Player(id: 'p3', name: '超哥', stack: 99.2, seat: 2, statusTag: 'Straddle'),
-    const Player(id: 'p4', name: '见南山', stack: 137.9, seat: 3, hasFolded: true),
-    const Player(id: 'p5', name: '脆皮五华', stack: 75.8, seat: 4),
-    const Player(id: 'p6', name: '薄注', stack: 56.3, seat: 5, isActive: true),
-    // seats 6,7,8 empty for demo
-    const Player(id: 'p9', name: 'hch2003', stack: 119.8, seat: 9, isActive: true,
-      holeCards: [PokerCard(2, 13), PokerCard(3, 3)]), // K♥ 3♦
-  ];
-
   final _community = [
     const PokerCard(2, 14), // A♥
     const PokerCard(1, 13), // K♠
@@ -54,19 +40,92 @@ class _TableViewState extends State<_TableView> {
   ];
 
   @override
+  void initState() {
+    super.initState();
+    _loadTable();
+  }
+
+  Future<void> _loadTable() async {
+    final token = await AuthRepository().getToken();
+    if (mounted) {
+      context.read<TableBloc>().add(TableLoadPlayers(widget.tableId, token: token));
+    }
+  }
+
+  Future<void> _showJoinDialog() async {
+    final token = await AuthRepository().getToken();
+    if (!mounted || token == null) return;
+
+    final confirmed = await showDialog<bool>(
+      context: context,
+      barrierDismissible: false,
+      builder: (_) => const JoinTableDialog(),
+    );
+
+    if (confirmed == true && mounted) {
+      context.read<TableBloc>().add(TableJoinRequested(widget.tableId, token));
+    }
+  }
+
+  Future<void> _showLeaveDialog() async {
+    final token = await AuthRepository().getToken();
+    if (!mounted || token == null) return;
+
+    final state = context.read<TableBloc>().state;
+    int remainingChips = 0;
+    if (state is TableJoined) {
+      remainingChips = state.myPlayer.chips.toInt();
+    }
+    final returnedGold = remainingChips ~/ 10;
+
+    final confirmed = await showDialog<bool>(
+      context: context,
+      barrierDismissible: false,
+      builder: (_) => LeaveTableDialog(
+        remainingChips: remainingChips,
+        returnedGold: returnedGold,
+      ),
+    );
+
+    if (confirmed == true && mounted) {
+      context.read<TableBloc>().add(TableLeaveRequested(widget.tableId, token));
+    }
+  }
+
+  @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: OrientationBuilder(
-        builder: (context, orientation) {
-          return orientation == Orientation.portrait
-              ? _buildPortrait(context)
-              : _buildLandscape(context);
+      body: BlocConsumer<TableBloc, TableState>(
+        listener: (context, state) {
+          if (state is TableError) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(
+                content: Text(state.message, style: const TextStyle(color: Colors.white)),
+                backgroundColor: AppColors.foldRed,
+              ),
+            );
+          }
+        },
+        builder: (context, state) {
+          return OrientationBuilder(
+            builder: (context, orientation) {
+              return orientation == Orientation.portrait
+                  ? _buildPortrait(context, state)
+                  : _buildLandscape(context, state);
+            },
+          );
         },
       ),
     );
   }
 
-  Widget _buildPortrait(BuildContext context) {
+  Widget _buildPortrait(BuildContext context, TableState state) {
+    final players = _getPlayers(state);
+    final isSpectating = state is TableSpectating || state is TableLoadingPlayers;
+    final isJoining = state is TableJoining;
+    final isLeaving = state is TableLeaving;
+    final myPlayer = state is TableJoined ? state.myPlayer : null;
+
     return Container(
       color: AppColors.bg,
       child: SafeArea(
@@ -91,24 +150,46 @@ class _TableViewState extends State<_TableView> {
               ),
             ),
             // Players positioned
-            ..._buildPlayers(),
+            ..._buildPlayers(players),
             // Pot info
             _buildPotInfo(),
             // Community cards
             _buildCommunityCards(),
-            // Hero area
-            _buildHero(),
-            // Action buttons
-            _buildActionButtons(),
+            // Hero area (only when joined)
+            if (myPlayer != null) _buildHero(myPlayer),
+            // Action buttons (only when joined)
+            if (myPlayer != null) _buildActionButtons(),
+            // Join button (spectating)
+            if (isSpectating)
+              Positioned(
+                bottom: 80,
+                left: 0,
+                right: 0,
+                child: Center(child: _buildJoinButton()),
+              ),
             // Toolbar
-            _buildToolbar(),
+            _buildToolbar(myPlayer != null),
+            // Loading overlay
+            if (isJoining || isLeaving)
+              Container(
+                color: Colors.black.withOpacity(0.5),
+                child: const Center(
+                  child: CircularProgressIndicator(color: AppColors.gold),
+                ),
+              ),
           ],
         ),
       ),
     );
   }
 
-  Widget _buildLandscape(BuildContext context) {
+  Widget _buildLandscape(BuildContext context, TableState state) {
+    final players = _getPlayers(state);
+    final isSpectating = state is TableSpectating || state is TableLoadingPlayers;
+    final isJoining = state is TableJoining;
+    final isLeaving = state is TableLeaving;
+    final myPlayer = state is TableJoined ? state.myPlayer : null;
+
     return Container(
       color: AppColors.bg,
       child: SafeArea(
@@ -139,7 +220,7 @@ class _TableViewState extends State<_TableView> {
               right: 0,
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                children: _players
+                children: players
                     .where((p) => [0, 1, 7, 8].contains(p.seat))
                     .map((p) => _PlayerWidget(player: p))
                     .toList(),
@@ -152,7 +233,7 @@ class _TableViewState extends State<_TableView> {
               bottom: 80,
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
-                children: _players
+                children: players
                     .where((p) => p.seat == 6)
                     .map((p) => _PlayerWidget(player: p))
                     .toList(),
@@ -165,7 +246,7 @@ class _TableViewState extends State<_TableView> {
               bottom: 80,
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
-                children: _players
+                children: players
                     .where((p) => [2, 3].contains(p.seat))
                     .map((p) => _PlayerWidget(player: p))
                     .toList(),
@@ -217,95 +298,79 @@ class _TableViewState extends State<_TableView> {
               ),
             ),
             // Bottom: hero + actions
-            Positioned(
-              bottom: 8,
-              left: 16,
-              child: _buildLandscapeHero(),
-            ),
-            // Right side actions
-            Positioned(
-              bottom: 8,
-              right: 16,
-              child: Row(
-                children: [
-                  ActionButton(label: '弃牌', icon: Icons.close, bgColor: AppColors.foldRed, size: 32, onTap: () {}),
-                  const SizedBox(width: 6),
-                  ActionButton(label: '加分', text: '+', bgColor: AppColors.raiseNavy, size: 34, onTap: () {}),
-                  const SizedBox(width: 6),
-                  ActionButton(label: '跟分', text: '2BB', bgColor: AppColors.callGreen, size: 32, onTap: () {}),
-                ],
+            if (myPlayer != null)
+              Positioned(
+                bottom: 8,
+                left: 16,
+                child: _buildLandscapeHero(myPlayer),
               ),
-            ),
+            // Right side actions (joined)
+            if (myPlayer != null)
+              Positioned(
+                bottom: 8,
+                right: 16,
+                child: Row(
+                  children: [
+                    ActionButton(
+                      label: '弃牌',
+                      icon: Icons.close,
+                      bgColor: AppColors.foldRed,
+                      size: 32,
+                      onTap: () => context.read<TableBloc>().add(TablePlayerAction('fold')),
+                    ),
+                    const SizedBox(width: 6),
+                    ActionButton(
+                      label: '加分',
+                      text: '+',
+                      bgColor: AppColors.raiseNavy,
+                      size: 34,
+                      onTap: () => context.read<TableBloc>().add(TablePlayerAction('raise')),
+                    ),
+                    const SizedBox(width: 6),
+                    ActionButton(
+                      label: '跟分',
+                      text: '2BB',
+                      bgColor: AppColors.callGreen,
+                      size: 32,
+                      onTap: () => context.read<TableBloc>().add(TablePlayerAction('call')),
+                    ),
+                  ],
+                ),
+              ),
+            // Join button (spectating)
+            if (isSpectating)
+              Positioned(
+                bottom: 60,
+                left: 0,
+                right: 0,
+                child: Center(child: _buildJoinButton()),
+              ),
             // Toolbar
-            _buildToolbar(),
+            _buildToolbar(myPlayer != null),
+            // Loading overlay
+            if (isJoining || isLeaving)
+              Container(
+                color: Colors.black.withOpacity(0.5),
+                child: const Center(
+                  child: CircularProgressIndicator(color: AppColors.gold),
+                ),
+              ),
           ],
         ),
       ),
     );
   }
 
-  Widget _buildLandscapeHero() {
-    final hero = _players.firstWhere((p) => p.seat == 9);
-    return Row(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              hero.name,
-              style: const TextStyle(
-                fontSize: 10,
-                fontWeight: FontWeight.bold,
-                color: AppColors.goldBright,
-                shadows: [
-                  Shadow(color: AppColors.gold, blurRadius: 8),
-                ],
-              ),
-            ),
-            const SizedBox(height: 2),
-            Row(
-              children: [
-                PlayerAvatar(
-                  emoji: '👤',
-                  isActive: hero.isActive,
-                  timerText: hero.isActive ? '11S' : null,
-                  size: 32,
-                ),
-                const SizedBox(width: 6),
-                Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-                  decoration: BoxDecoration(
-                    color: AppColors.surface.withOpacity(0.8),
-                    borderRadius: BorderRadius.circular(6),
-                    border: Border.all(color: AppColors.gold.withOpacity(0.3)),
-                  ),
-                  child: Text(
-                    '${hero.stack}BB',
-                    style: const TextStyle(fontSize: 8, color: AppColors.goldBright),
-                  ),
-                ),
-              ],
-            ),
-          ],
-        ),
-        const SizedBox(width: 8),
-        if (hero.holeCards != null)
-          Row(
-            children: hero.holeCards!.map((c) => Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 2),
-              child: PokerCardWidget(card: c, width: 24, height: 34),
-            )).toList(),
-          ),
-      ],
-    );
+  List<Player> _getPlayers(TableState state) {
+    if (state is TableSpectating) return state.players;
+    if (state is TableJoining) return state.players;
+    if (state is TableJoined) return state.players;
+    if (state is TableBetting) return [];
+    if (state is TableShowdown) return [];
+    return [];
   }
 
-  List<Widget> _buildPlayers() {
-    // Seat positions (portrait): 10 seats on oval
-    // 0=top center, 1=top right, 2=right upper, 3=right lower, 4=bottom right,
-    // 5=bottom left, 6=left lower, 7=left upper, 8=top left, 9=bottom center (hero)
+  List<Widget> _buildPlayers(List<Player> players) {
     final positions = [
       const Offset(0.5, 0.03),   // 0: top center
       const Offset(0.88, 0.08),  // 1: top right
@@ -316,20 +381,77 @@ class _TableViewState extends State<_TableView> {
       const Offset(0.08, 0.48),  // 6: left lower
       const Offset(0.04, 0.22),  // 7: left upper
       const Offset(0.12, 0.08),  // 8: top left
-      const Offset(0.5, 0.70),   // 9: bottom center (hero, handled separately)
     ];
 
-    return _players.where((p) => p.seat != null && p.seat != 9).map((p) {
-      final pos = positions[p.seat!];
-      return Positioned(
+    final widgets = <Widget>[];
+
+    // Active players
+    for (final player in players.where((p) => p.seat != null && p.seat != 9)) {
+      final pos = positions[player.seat!];
+      widgets.add(Positioned(
         top: pos.dy * MediaQuery.of(context).size.height,
         left: pos.dx * MediaQuery.of(context).size.width,
         child: Transform.translate(
           offset: const Offset(-0.5, 0),
-          child: _PlayerWidget(player: p),
+          child: _PlayerWidget(player: player),
         ),
-      );
-    }).toList();
+      ));
+    }
+
+    // Empty seats
+    final takenSeats = players.where((p) => p.seat != null && p.seat != 9).map((p) => p.seat!).toSet();
+    for (int i = 0; i < 9; i++) {
+      if (!takenSeats.contains(i)) {
+        final pos = positions[i];
+        widgets.add(Positioned(
+          top: pos.dy * MediaQuery.of(context).size.height,
+          left: pos.dx * MediaQuery.of(context).size.width,
+          child: Transform.translate(
+            offset: const Offset(-0.5, 0),
+            child: _EmptySeatWidget(),
+          ),
+        ));
+      }
+    }
+
+    return widgets;
+  }
+
+  Widget _buildJoinButton() {
+    return GestureDetector(
+      onTap: _showJoinDialog,
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+        decoration: BoxDecoration(
+          gradient: const LinearGradient(
+            colors: [AppColors.foldRed, Color(0xFFB8860B)],
+          ),
+          borderRadius: BorderRadius.circular(20),
+          border: Border.all(color: AppColors.gold, width: 1.5),
+          boxShadow: [
+            BoxShadow(
+              color: AppColors.gold.withOpacity(0.3),
+              blurRadius: 10,
+            ),
+          ],
+        ),
+        child: const Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(Icons.videogame_asset, color: AppColors.goldBright, size: 18),
+            SizedBox(width: 6),
+            Text(
+              '加入游戏',
+              style: TextStyle(
+                fontSize: 14,
+                fontWeight: FontWeight.bold,
+                color: AppColors.goldBright,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
   }
 
   Widget _buildPotInfo() {
@@ -339,7 +461,6 @@ class _TableViewState extends State<_TableView> {
       right: 0,
       child: Column(
         children: [
-          // Chip stacks
           Row(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
@@ -353,7 +474,6 @@ class _TableViewState extends State<_TableView> {
             ],
           ),
           const SizedBox(height: 4),
-          // Pot pill
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
             decoration: BoxDecoration(
@@ -409,7 +529,6 @@ class _TableViewState extends State<_TableView> {
                 padding: const EdgeInsets.symmetric(horizontal: 3),
                 child: PokerCardWidget(card: c, width: 24, height: 34),
               )),
-              // 2 face-down cards
               ...List.generate(2, (_) => const Padding(
                 padding: EdgeInsets.symmetric(horizontal: 3),
                 child: PokerCardWidget(faceDown: true, width: 24, height: 34),
@@ -417,7 +536,6 @@ class _TableViewState extends State<_TableView> {
             ],
           ),
           const SizedBox(height: 8),
-          // Watermark
           Opacity(
             opacity: 0.2,
             child: Column(
@@ -453,8 +571,7 @@ class _TableViewState extends State<_TableView> {
     );
   }
 
-  Widget _buildHero() {
-    final hero = _players.firstWhere((p) => p.seat == 9);
+  Widget _buildHero(Player hero) {
     return Positioned(
       bottom: 80,
       left: 0,
@@ -491,7 +608,7 @@ class _TableViewState extends State<_TableView> {
                   border: Border.all(color: AppColors.gold.withOpacity(0.3)),
                 ),
                 child: Text(
-                  '${hero.stack}BB',
+                  '${hero.chips}BB',
                   style: const TextStyle(fontSize: 9, color: AppColors.goldBright),
                 ),
               ),
@@ -513,6 +630,63 @@ class _TableViewState extends State<_TableView> {
     );
   }
 
+  Widget _buildLandscapeHero(Player hero) {
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              hero.name,
+              style: const TextStyle(
+                fontSize: 10,
+                fontWeight: FontWeight.bold,
+                color: AppColors.goldBright,
+                shadows: [
+                  Shadow(color: AppColors.gold, blurRadius: 8),
+                ],
+              ),
+            ),
+            const SizedBox(height: 2),
+            Row(
+              children: [
+                PlayerAvatar(
+                  emoji: '👤',
+                  isActive: hero.isActive,
+                  timerText: hero.isActive ? '11S' : null,
+                  size: 32,
+                ),
+                const SizedBox(width: 6),
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                  decoration: BoxDecoration(
+                    color: AppColors.surface.withOpacity(0.8),
+                    borderRadius: BorderRadius.circular(6),
+                    border: Border.all(color: AppColors.gold.withOpacity(0.3)),
+                  ),
+                  child: Text(
+                    '${hero.chips}BB',
+                    style: const TextStyle(fontSize: 8, color: AppColors.goldBright),
+                  ),
+                ),
+              ],
+            ),
+          ],
+        ),
+        const SizedBox(width: 8),
+        if (hero.holeCards != null)
+          Row(
+            children: hero.holeCards!.map((c) => Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 2),
+              child: PokerCardWidget(card: c, width: 24, height: 34),
+            )).toList(),
+          ),
+      ],
+    );
+  }
+
   Widget _buildActionButtons() {
     return Positioned(
       bottom: 12,
@@ -526,7 +700,7 @@ class _TableViewState extends State<_TableView> {
             icon: Icons.close,
             bgColor: AppColors.foldRed,
             size: 40,
-            onTap: () {},
+            onTap: () => context.read<TableBloc>().add(TablePlayerAction('fold')),
           ),
           const SizedBox(width: 10),
           Column(
@@ -539,7 +713,7 @@ class _TableViewState extends State<_TableView> {
                 text: '+',
                 bgColor: AppColors.raiseNavy,
                 size: 44,
-                onTap: () {},
+                onTap: () => context.read<TableBloc>().add(TablePlayerAction('raise')),
               ),
               const SizedBox(height: 2),
               _quickBetLabel('67%'),
@@ -551,7 +725,7 @@ class _TableViewState extends State<_TableView> {
             text: '2BB',
             bgColor: AppColors.callGreen,
             size: 40,
-            onTap: () {},
+            onTap: () => context.read<TableBloc>().add(TablePlayerAction('call')),
           ),
         ],
       ),
@@ -573,7 +747,7 @@ class _TableViewState extends State<_TableView> {
     );
   }
 
-  Widget _buildToolbar() {
+  Widget _buildToolbar(bool isJoined) {
     return Positioned(
       bottom: 12,
       left: 8,
@@ -586,6 +760,10 @@ class _TableViewState extends State<_TableView> {
               _toolbarBtn(Icons.grid_view),
               const SizedBox(width: 6),
               _toolbarBtn(Icons.timer),
+              if (isJoined) ...[
+                const SizedBox(width: 6),
+                _toolbarBtn(Icons.logout, onTap: _showLeaveDialog),
+              ],
             ],
           ),
           Row(
@@ -600,16 +778,19 @@ class _TableViewState extends State<_TableView> {
     );
   }
 
-  Widget _toolbarBtn(IconData icon) {
-    return Container(
-      width: 26,
-      height: 26,
-      decoration: BoxDecoration(
-        color: AppColors.surface.withOpacity(0.7),
-        borderRadius: BorderRadius.circular(6),
-        border: Border.all(color: AppColors.gold.withOpacity(0.3)),
+  Widget _toolbarBtn(IconData icon, {VoidCallback? onTap}) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        width: 26,
+        height: 26,
+        decoration: BoxDecoration(
+          color: AppColors.surface.withOpacity(0.7),
+          borderRadius: BorderRadius.circular(6),
+          border: Border.all(color: AppColors.gold.withOpacity(0.3)),
+        ),
+        child: Icon(icon, size: 14, color: AppColors.goldBright),
       ),
-      child: Icon(icon, size: 14, color: AppColors.goldBright),
     );
   }
 }
@@ -692,7 +873,7 @@ class _PlayerWidget extends StatelessWidget {
             border: Border.all(color: AppColors.gold.withOpacity(0.3)),
           ),
           child: Text(
-            '${player.stack}BB',
+            '${player.chips}BB',
             style: TextStyle(
               fontSize: 7,
               color: AppColors.goldBright.withOpacity(player.hasFolded ? 0.5 : 1.0),
@@ -713,5 +894,43 @@ class _PlayerWidget extends StatelessWidget {
       'p6': '🌙',
     };
     return map[id] ?? '👤';
+  }
+}
+
+class _EmptySeatWidget extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        const SizedBox(height: 11),
+        Container(
+          width: 30,
+          height: 30,
+          decoration: BoxDecoration(
+            color: Colors.black.withOpacity(0.3),
+            shape: BoxShape.circle,
+            border: Border.all(color: AppColors.gold.withOpacity(0.2)),
+          ),
+          child: Icon(Icons.add, size: 14, color: AppColors.gold.withOpacity(0.3)),
+        ),
+        const SizedBox(height: 2),
+        Container(
+          padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 1),
+          decoration: BoxDecoration(
+            color: Colors.black.withOpacity(0.3),
+            borderRadius: BorderRadius.circular(6),
+            border: Border.all(color: AppColors.gold.withOpacity(0.1)),
+          ),
+          child: Text(
+            '空位',
+            style: TextStyle(
+              fontSize: 7,
+              color: AppColors.gold.withOpacity(0.3),
+            ),
+          ),
+        ),
+      ],
+    );
   }
 }

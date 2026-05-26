@@ -1,0 +1,2302 @@
+{
+  "hands": [
+    {
+      "id": "hand-3ed09268394dc934",
+      "table_id": "tbl-5d905bba16aacbe6",
+      "hand_number": 1,
+      "phase": "flop",
+      "pot": 62.3,
+      "players_count": 7,
+      "actions": [
+        {
+          "player": "p1",
+          "action": "raise",
+          "amount": 18.3,
+          "phase": "river"
+        },
+        {
+          "player": "p2",
+          "action": "fold",
+          "amount": 49.0,
+          "phase": "preflop"
+        },
+        {
+          "player": "p3",
+          "action": "call",
+          "amount": 34.8,
+          "phase": "flop"
+        },
+        {
+          "player": "p4",
+          "action": "check",
+          "amount": 11.1,
+          "phase": "turn"
+        },
+        {
+          "player": "p5",
+          "action": "raise",
+          "amount": 42.3,
+          "phase": "river"
+        },
+        {
+          "player": "p6",
+          "action": "check",
+          "amount": 20.2,
+          "phase": "flop"
+        },
+        {
+          "player": "p7",
+          "action": "fold",
+          "amount": 32.6,
+          "phase": "river"
+        },
+        {
+          "player": "p8",
+          "action": "check",
+          "amount": 0,
+          "phase": "turn"
+        }
+      ],
+      "winner": "p3",
+      "timestamp": "2026-05-21T11:51:54.218262"
+    },
+    {
+      "id": "hand-37d8aaebd1a5d19f",
+      "table_id": "tbl-5d905bba16aacbe6",
+      "hand_number": 2,
+      "phase": "river",
+      "pot": 96.3,
+      "players_count": 3,
+      "actions": [
+        {
+          "player": "p1",
+          "action": "all_in",
+          "amount": 25.2,
+          "phase": "preflop"
+        },
+        {
+          "player": "p2",
+          "action": "call",
+          "amount": 0,
+          "phase": "flop"
+        },
+        {
+          "player": "p3",
+          "action": "raise",
+          "amount": 1.4,
+          "phase": "preflop"
+        },
+        {
+          "player": "p4",
+          "action": "call",
+          "amount": 0,
+          "phase": "river"
+        },
+        {
+          "player": "p5",
+          "action": "check",
+          "amount": 22.7,
+          "phase": "river"
+        },
+        {
+          "player": "p6",
+          "action": "raise",
+          "amount": 0,
+          "phase": "river"
+        },
+        {
+          "player": "p7",
+          "action": "all_in",
+          "amount": 18.0,
+          "phase": "preflop"
+        },
+        {
+          "player": "p8",
+          "action": "call",
+          "amount": 0.9,
+          "phase": "preflop"
+        },
+        {
+          "player": "p9",
+          "action": "all_in",
+          "amount": 0,
+          "phase": "preflop"
+        },
+        {
+          "player": "p10",
+          "action": "raise",
+          "amount": 4.5,
+          "phase": "flop"
+        },
+        {
+          "player": "p11",
+          "action": "check",
+          "amount": 21.2,
+          "phase": "preflop"
+        },
+        {
+          "player": "p12",
+          "action": "raise",
+          "amount": 0,
+          "phase": "flop"
+        },
+        {
+          "player": "p13",
+          "action": "call",
+          "amount": 22.6,
+          "phase": "turn"
+        },
+        {
+          "player": "p14",
+          "action": "check",
+          "amount": 18.4,
+          "phase": "flop"
+        },
+        {
+          "player": "p15",
+          "action": "fold",
+          "amount": 0,
+          "phase": "turn"
+        },
+        {
+          "player": "p16",
+          "action": "all_in",
+          "amount": 0,
+          "phase": "turn"
+        },
+        {
+          "player": "p17",
+          "action": "fold",
+          "amount": 27.1,
+          "phase": "flop"
+        },
+        {
+          "player": "p18",
+          "action": "all_in",
+          "amount": 0,
+          "phase": "river"
+        },
+        {
+          "player": "p19",
+          "action": "raise",
+          "amount": 16.4,
+          "phase": "turn"
+        }
+      ],
+      "winner": "p3",
+      "timestamp": "2026-05-22T11:51:54.218284"
+    },
+    {
+      "id": "hand-71a49257ab4b19ae",
+      "table_id": "tbl-5d905bba16aacbe6",
+      "hand_number": 3,
+      "phase": "river",
+      "pot": 65.4,
+      "players_count": 7,
+      "actions": [
+        {
+          "player": "p1",
+          "action": "check",
+          "amount": 36.6,
+          "phase": "preflop"
+        },
+        {
+          "player": "p2",
+          "action": "fold",
+          "amount": 12.1,
+          "phase": "preflop"
+        },
+        {
+          "player": "p3",
+          "action": "call",
+          "amount": 0,
+          "phase": "flop"
+        },
+        {
+          "player": "p4",
+          "action": "raise",
+          "amount": 0,
+          "phase": "preflop"
+        },
+        {
+          "player": "p5",
+          "action": "check",
+          "amount": 17.2,
+          "phase": "river"
+        },
+        {
+          "player": "p6",
+          "action": "call",
+          "amount": 0,
+          "phase": "turn"
+        },
+        {
+          "player": "p7",
+          "action": "check",
+          "amount": 29.3,
+          "phase": "river"
+        },
+        {
+          "player": "p8",
+          "action": "all_in",
+          "amount": 0,
+          "phase": "turn"
+        },
+        {
+          "player": "p9",
+          "action": "all_in",
+          "amount": 8.8,
+          "phase": "turn"
+        },
+        {
+          "player": "p10",
+          "action": "raise",
+          "amount": 0,
+          "phase": "preflop"
+        },
+        {
+          "player": "p11",
+          "action": "call",
+          "amount": 15.7,
+          "phase": "preflop"
+        }
+      ],
+      "winner": "p1",
+      "timestamp": "2026-05-22T11:51:54.218294"
+    },
+    {
+      "id": "hand-0a5492aa2c19086a",
+      "table_id": "tbl-5d905bba16aacbe6",
+      "hand_number": 4,
+      "phase": "flop",
+      "pot": 43.2,
+      "players_count": 2,
+      "actions": [
+        {
+          "player": "p1",
+          "action": "check",
+          "amount": 14.2,
+          "phase": "river"
+        },
+        {
+          "player": "p2",
+          "action": "all_in",
+          "amount": 19.5,
+          "phase": "turn"
+        }
+      ],
+      "winner": "p1",
+      "timestamp": "2026-05-21T11:51:54.218300"
+    },
+    {
+      "id": "hand-e5a95a1b741a2587",
+      "table_id": "tbl-5d905bba16aacbe6",
+      "hand_number": 5,
+      "phase": "river",
+      "pot": 41.4,
+      "players_count": 3,
+      "actions": [
+        {
+          "player": "p1",
+          "action": "raise",
+          "amount": 3.5,
+          "phase": "preflop"
+        },
+        {
+          "player": "p2",
+          "action": "fold",
+          "amount": 43.0,
+          "phase": "preflop"
+        },
+        {
+          "player": "p3",
+          "action": "all_in",
+          "amount": 5.0,
+          "phase": "flop"
+        },
+        {
+          "player": "p4",
+          "action": "check",
+          "amount": 0,
+          "phase": "river"
+        },
+        {
+          "player": "p5",
+          "action": "raise",
+          "amount": 0,
+          "phase": "preflop"
+        },
+        {
+          "player": "p6",
+          "action": "fold",
+          "amount": 27.5,
+          "phase": "preflop"
+        },
+        {
+          "player": "p7",
+          "action": "call",
+          "amount": 29.3,
+          "phase": "turn"
+        },
+        {
+          "player": "p8",
+          "action": "raise",
+          "amount": 11.2,
+          "phase": "turn"
+        },
+        {
+          "player": "p9",
+          "action": "raise",
+          "amount": 45.9,
+          "phase": "turn"
+        },
+        {
+          "player": "p10",
+          "action": "all_in",
+          "amount": 0,
+          "phase": "flop"
+        },
+        {
+          "player": "p11",
+          "action": "call",
+          "amount": 43.4,
+          "phase": "turn"
+        }
+      ],
+      "winner": null,
+      "timestamp": "2026-05-25T11:51:54.218311"
+    },
+    {
+      "id": "hand-cb7a942089e8abf8",
+      "table_id": "tbl-5d905bba16aacbe6",
+      "hand_number": 6,
+      "phase": "river",
+      "pot": 87.8,
+      "players_count": 7,
+      "actions": [
+        {
+          "player": "p1",
+          "action": "fold",
+          "amount": 49.8,
+          "phase": "river"
+        },
+        {
+          "player": "p2",
+          "action": "raise",
+          "amount": 0,
+          "phase": "flop"
+        }
+      ],
+      "winner": "p3",
+      "timestamp": "2026-05-22T11:51:54.218317"
+    },
+    {
+      "id": "hand-2078ad373a3b0452",
+      "table_id": "tbl-5d905bba16aacbe6",
+      "hand_number": 7,
+      "phase": "river",
+      "pot": 48.0,
+      "players_count": 7,
+      "actions": [
+        {
+          "player": "p1",
+          "action": "fold",
+          "amount": 26.6,
+          "phase": "turn"
+        },
+        {
+          "player": "p2",
+          "action": "call",
+          "amount": 0,
+          "phase": "river"
+        },
+        {
+          "player": "p3",
+          "action": "all_in",
+          "amount": 0,
+          "phase": "flop"
+        },
+        {
+          "player": "p4",
+          "action": "call",
+          "amount": 26.7,
+          "phase": "preflop"
+        },
+        {
+          "player": "p5",
+          "action": "fold",
+          "amount": 46.2,
+          "phase": "preflop"
+        }
+      ],
+      "winner": "p7",
+      "timestamp": "2026-05-20T11:51:54.218324"
+    },
+    {
+      "id": "hand-383b98939df4ed3d",
+      "table_id": "tbl-5d905bba16aacbe6",
+      "hand_number": 8,
+      "phase": "river",
+      "pot": 51.7,
+      "players_count": 6,
+      "actions": [
+        {
+          "player": "p1",
+          "action": "call",
+          "amount": 0,
+          "phase": "river"
+        },
+        {
+          "player": "p2",
+          "action": "all_in",
+          "amount": 9.4,
+          "phase": "flop"
+        },
+        {
+          "player": "p3",
+          "action": "raise",
+          "amount": 9.1,
+          "phase": "river"
+        },
+        {
+          "player": "p4",
+          "action": "all_in",
+          "amount": 0,
+          "phase": "preflop"
+        },
+        {
+          "player": "p5",
+          "action": "check",
+          "amount": 41.9,
+          "phase": "preflop"
+        },
+        {
+          "player": "p6",
+          "action": "raise",
+          "amount": 0,
+          "phase": "flop"
+        },
+        {
+          "player": "p7",
+          "action": "call",
+          "amount": 35.2,
+          "phase": "flop"
+        },
+        {
+          "player": "p8",
+          "action": "call",
+          "amount": 0,
+          "phase": "flop"
+        },
+        {
+          "player": "p9",
+          "action": "raise",
+          "amount": 0,
+          "phase": "river"
+        },
+        {
+          "player": "p10",
+          "action": "check",
+          "amount": 22.7,
+          "phase": "river"
+        },
+        {
+          "player": "p11",
+          "action": "call",
+          "amount": 38.7,
+          "phase": "river"
+        }
+      ],
+      "winner": "p2",
+      "timestamp": "2026-05-24T11:51:54.218336"
+    },
+    {
+      "id": "hand-1a215a3fba914011",
+      "table_id": "tbl-5d905bba16aacbe6",
+      "hand_number": 9,
+      "phase": "river",
+      "pot": 6.4,
+      "players_count": 5,
+      "actions": [
+        {
+          "player": "p1",
+          "action": "all_in",
+          "amount": 16.6,
+          "phase": "preflop"
+        },
+        {
+          "player": "p2",
+          "action": "check",
+          "amount": 43.5,
+          "phase": "flop"
+        },
+        {
+          "player": "p3",
+          "action": "call",
+          "amount": 32.6,
+          "phase": "turn"
+        },
+        {
+          "player": "p4",
+          "action": "all_in",
+          "amount": 16.2,
+          "phase": "turn"
+        },
+        {
+          "player": "p5",
+          "action": "fold",
+          "amount": 37.2,
+          "phase": "turn"
+        },
+        {
+          "player": "p6",
+          "action": "fold",
+          "amount": 15.9,
+          "phase": "flop"
+        },
+        {
+          "player": "p7",
+          "action": "fold",
+          "amount": 14.6,
+          "phase": "flop"
+        },
+        {
+          "player": "p8",
+          "action": "raise",
+          "amount": 19.0,
+          "phase": "flop"
+        },
+        {
+          "player": "p9",
+          "action": "check",
+          "amount": 0,
+          "phase": "turn"
+        },
+        {
+          "player": "p10",
+          "action": "call",
+          "amount": 0,
+          "phase": "flop"
+        },
+        {
+          "player": "p11",
+          "action": "check",
+          "amount": 4.8,
+          "phase": "preflop"
+        },
+        {
+          "player": "p12",
+          "action": "all_in",
+          "amount": 19.3,
+          "phase": "flop"
+        },
+        {
+          "player": "p13",
+          "action": "all_in",
+          "amount": 1.7,
+          "phase": "preflop"
+        },
+        {
+          "player": "p14",
+          "action": "check",
+          "amount": 47.8,
+          "phase": "river"
+        },
+        {
+          "player": "p15",
+          "action": "all_in",
+          "amount": 34.2,
+          "phase": "river"
+        },
+        {
+          "player": "p16",
+          "action": "all_in",
+          "amount": 0,
+          "phase": "turn"
+        },
+        {
+          "player": "p17",
+          "action": "fold",
+          "amount": 28.0,
+          "phase": "preflop"
+        },
+        {
+          "player": "p18",
+          "action": "raise",
+          "amount": 41.0,
+          "phase": "river"
+        }
+      ],
+      "winner": "p1",
+      "timestamp": "2026-05-21T11:51:54.218352"
+    },
+    {
+      "id": "hand-dd6504d64f9ae0c8",
+      "table_id": "tbl-5d905bba16aacbe6",
+      "hand_number": 10,
+      "phase": "turn",
+      "pot": 53.9,
+      "players_count": 4,
+      "actions": [
+        {
+          "player": "p1",
+          "action": "check",
+          "amount": 3.8,
+          "phase": "river"
+        },
+        {
+          "player": "p2",
+          "action": "all_in",
+          "amount": 34.7,
+          "phase": "river"
+        },
+        {
+          "player": "p3",
+          "action": "call",
+          "amount": 42.7,
+          "phase": "flop"
+        },
+        {
+          "player": "p4",
+          "action": "call",
+          "amount": 20.4,
+          "phase": "flop"
+        }
+      ],
+      "winner": "p3",
+      "timestamp": "2026-05-18T11:51:54.218359"
+    },
+    {
+      "id": "hand-33767f2f7cb02372",
+      "table_id": "tbl-5d905bba16aacbe6",
+      "hand_number": 11,
+      "phase": "river",
+      "pot": 52.5,
+      "players_count": 2,
+      "actions": [
+        {
+          "player": "p1",
+          "action": "call",
+          "amount": 2.1,
+          "phase": "turn"
+        },
+        {
+          "player": "p2",
+          "action": "raise",
+          "amount": 3.1,
+          "phase": "preflop"
+        },
+        {
+          "player": "p3",
+          "action": "check",
+          "amount": 15.1,
+          "phase": "preflop"
+        },
+        {
+          "player": "p4",
+          "action": "all_in",
+          "amount": 8.9,
+          "phase": "flop"
+        }
+      ],
+      "winner": "p1",
+      "timestamp": "2026-05-23T11:51:54.218366"
+    },
+    {
+      "id": "hand-54edf07ebac1af45",
+      "table_id": "tbl-5d905bba16aacbe6",
+      "hand_number": 12,
+      "phase": "turn",
+      "pot": 33.3,
+      "players_count": 2,
+      "actions": [
+        {
+          "player": "p1",
+          "action": "check",
+          "amount": 38.5,
+          "phase": "river"
+        },
+        {
+          "player": "p2",
+          "action": "all_in",
+          "amount": 0,
+          "phase": "preflop"
+        },
+        {
+          "player": "p3",
+          "action": "call",
+          "amount": 32.6,
+          "phase": "flop"
+        },
+        {
+          "player": "p4",
+          "action": "check",
+          "amount": 0,
+          "phase": "preflop"
+        },
+        {
+          "player": "p5",
+          "action": "all_in",
+          "amount": 0,
+          "phase": "flop"
+        },
+        {
+          "player": "p6",
+          "action": "check",
+          "amount": 46.1,
+          "phase": "preflop"
+        },
+        {
+          "player": "p7",
+          "action": "check",
+          "amount": 0,
+          "phase": "turn"
+        },
+        {
+          "player": "p8",
+          "action": "call",
+          "amount": 25.1,
+          "phase": "turn"
+        },
+        {
+          "player": "p9",
+          "action": "check",
+          "amount": 15.3,
+          "phase": "flop"
+        },
+        {
+          "player": "p10",
+          "action": "fold",
+          "amount": 13.4,
+          "phase": "turn"
+        },
+        {
+          "player": "p11",
+          "action": "raise",
+          "amount": 0,
+          "phase": "flop"
+        },
+        {
+          "player": "p12",
+          "action": "raise",
+          "amount": 0,
+          "phase": "turn"
+        },
+        {
+          "player": "p13",
+          "action": "fold",
+          "amount": 28.6,
+          "phase": "river"
+        },
+        {
+          "player": "p14",
+          "action": "fold",
+          "amount": 20.6,
+          "phase": "flop"
+        },
+        {
+          "player": "p15",
+          "action": "check",
+          "amount": 2.4,
+          "phase": "flop"
+        },
+        {
+          "player": "p16",
+          "action": "all_in",
+          "amount": 8.3,
+          "phase": "preflop"
+        },
+        {
+          "player": "p17",
+          "action": "fold",
+          "amount": 0,
+          "phase": "flop"
+        },
+        {
+          "player": "p18",
+          "action": "call",
+          "amount": 2.9,
+          "phase": "river"
+        },
+        {
+          "player": "p19",
+          "action": "all_in",
+          "amount": 9.5,
+          "phase": "flop"
+        },
+        {
+          "player": "p20",
+          "action": "all_in",
+          "amount": 0,
+          "phase": "river"
+        }
+      ],
+      "winner": "p1",
+      "timestamp": "2026-05-25T11:51:54.218381"
+    },
+    {
+      "id": "hand-32623830768b4724",
+      "table_id": "tbl-5d905bba16aacbe6",
+      "hand_number": 13,
+      "phase": "flop",
+      "pot": 70.3,
+      "players_count": 6,
+      "actions": [
+        {
+          "player": "p1",
+          "action": "raise",
+          "amount": 0,
+          "phase": "preflop"
+        },
+        {
+          "player": "p2",
+          "action": "fold",
+          "amount": 18.7,
+          "phase": "flop"
+        },
+        {
+          "player": "p3",
+          "action": "all_in",
+          "amount": 0,
+          "phase": "turn"
+        },
+        {
+          "player": "p4",
+          "action": "check",
+          "amount": 28.1,
+          "phase": "flop"
+        },
+        {
+          "player": "p5",
+          "action": "call",
+          "amount": 17.8,
+          "phase": "flop"
+        },
+        {
+          "player": "p6",
+          "action": "all_in",
+          "amount": 22.2,
+          "phase": "turn"
+        },
+        {
+          "player": "p7",
+          "action": "check",
+          "amount": 44.4,
+          "phase": "river"
+        },
+        {
+          "player": "p8",
+          "action": "check",
+          "amount": 49.3,
+          "phase": "river"
+        }
+      ],
+      "winner": "p1",
+      "timestamp": "2026-05-19T11:51:54.218390"
+    },
+    {
+      "id": "hand-c0309336f191f7c6",
+      "table_id": "tbl-5d905bba16aacbe6",
+      "hand_number": 14,
+      "phase": "flop",
+      "pot": 61.8,
+      "players_count": 5,
+      "actions": [
+        {
+          "player": "p1",
+          "action": "fold",
+          "amount": 14.4,
+          "phase": "river"
+        },
+        {
+          "player": "p2",
+          "action": "all_in",
+          "amount": 0,
+          "phase": "preflop"
+        },
+        {
+          "player": "p3",
+          "action": "all_in",
+          "amount": 35.6,
+          "phase": "preflop"
+        },
+        {
+          "player": "p4",
+          "action": "raise",
+          "amount": 4.7,
+          "phase": "river"
+        },
+        {
+          "player": "p5",
+          "action": "check",
+          "amount": 0,
+          "phase": "river"
+        },
+        {
+          "player": "p6",
+          "action": "fold",
+          "amount": 0,
+          "phase": "river"
+        },
+        {
+          "player": "p7",
+          "action": "call",
+          "amount": 34.6,
+          "phase": "river"
+        }
+      ],
+      "winner": "p2",
+      "timestamp": "2026-05-25T11:51:54.218399"
+    },
+    {
+      "id": "hand-c5cdb01a4cd504db",
+      "table_id": "tbl-5d905bba16aacbe6",
+      "hand_number": 15,
+      "phase": "turn",
+      "pot": 67.9,
+      "players_count": 6,
+      "actions": [
+        {
+          "player": "p1",
+          "action": "call",
+          "amount": 6.1,
+          "phase": "preflop"
+        },
+        {
+          "player": "p2",
+          "action": "raise",
+          "amount": 33.6,
+          "phase": "preflop"
+        },
+        {
+          "player": "p3",
+          "action": "call",
+          "amount": 45.8,
+          "phase": "flop"
+        },
+        {
+          "player": "p4",
+          "action": "fold",
+          "amount": 0,
+          "phase": "preflop"
+        },
+        {
+          "player": "p5",
+          "action": "call",
+          "amount": 0,
+          "phase": "river"
+        },
+        {
+          "player": "p6",
+          "action": "raise",
+          "amount": 23.3,
+          "phase": "preflop"
+        },
+        {
+          "player": "p7",
+          "action": "all_in",
+          "amount": 28.5,
+          "phase": "flop"
+        },
+        {
+          "player": "p8",
+          "action": "all_in",
+          "amount": 18.9,
+          "phase": "turn"
+        },
+        {
+          "player": "p9",
+          "action": "all_in",
+          "amount": 0,
+          "phase": "river"
+        },
+        {
+          "player": "p10",
+          "action": "raise",
+          "amount": 29.4,
+          "phase": "preflop"
+        }
+      ],
+      "winner": "p3",
+      "timestamp": "2026-05-21T11:51:54.218410"
+    },
+    {
+      "id": "hand-ecc706e07311965d",
+      "table_id": "tbl-5d905bba16aacbe6",
+      "hand_number": 16,
+      "phase": "river",
+      "pot": 68.7,
+      "players_count": 8,
+      "actions": [
+        {
+          "player": "p1",
+          "action": "raise",
+          "amount": 0,
+          "phase": "preflop"
+        },
+        {
+          "player": "p2",
+          "action": "all_in",
+          "amount": 49.9,
+          "phase": "preflop"
+        },
+        {
+          "player": "p3",
+          "action": "call",
+          "amount": 0,
+          "phase": "river"
+        },
+        {
+          "player": "p4",
+          "action": "fold",
+          "amount": 38.2,
+          "phase": "river"
+        },
+        {
+          "player": "p5",
+          "action": "call",
+          "amount": 48.6,
+          "phase": "turn"
+        },
+        {
+          "player": "p6",
+          "action": "call",
+          "amount": 24.0,
+          "phase": "turn"
+        },
+        {
+          "player": "p7",
+          "action": "raise",
+          "amount": 38.8,
+          "phase": "preflop"
+        },
+        {
+          "player": "p8",
+          "action": "check",
+          "amount": 26.1,
+          "phase": "river"
+        },
+        {
+          "player": "p9",
+          "action": "call",
+          "amount": 50.0,
+          "phase": "river"
+        },
+        {
+          "player": "p10",
+          "action": "call",
+          "amount": 47.1,
+          "phase": "turn"
+        },
+        {
+          "player": "p11",
+          "action": "check",
+          "amount": 0,
+          "phase": "turn"
+        },
+        {
+          "player": "p12",
+          "action": "check",
+          "amount": 41.5,
+          "phase": "turn"
+        },
+        {
+          "player": "p13",
+          "action": "call",
+          "amount": 0,
+          "phase": "flop"
+        }
+      ],
+      "winner": null,
+      "timestamp": "2026-05-21T11:51:54.218421"
+    },
+    {
+      "id": "hand-96a940f5ade9dd04",
+      "table_id": "tbl-5d905bba16aacbe6",
+      "hand_number": 17,
+      "phase": "flop",
+      "pot": 62.3,
+      "players_count": 6,
+      "actions": [
+        {
+          "player": "p1",
+          "action": "all_in",
+          "amount": 35.2,
+          "phase": "river"
+        },
+        {
+          "player": "p2",
+          "action": "raise",
+          "amount": 4.9,
+          "phase": "river"
+        },
+        {
+          "player": "p3",
+          "action": "fold",
+          "amount": 39.2,
+          "phase": "river"
+        },
+        {
+          "player": "p4",
+          "action": "fold",
+          "amount": 26.5,
+          "phase": "preflop"
+        },
+        {
+          "player": "p5",
+          "action": "all_in",
+          "amount": 17.5,
+          "phase": "preflop"
+        },
+        {
+          "player": "p6",
+          "action": "fold",
+          "amount": 0,
+          "phase": "flop"
+        },
+        {
+          "player": "p7",
+          "action": "check",
+          "amount": 38.6,
+          "phase": "flop"
+        },
+        {
+          "player": "p8",
+          "action": "fold",
+          "amount": 0,
+          "phase": "flop"
+        },
+        {
+          "player": "p9",
+          "action": "fold",
+          "amount": 11.7,
+          "phase": "flop"
+        },
+        {
+          "player": "p10",
+          "action": "raise",
+          "amount": 0,
+          "phase": "river"
+        },
+        {
+          "player": "p11",
+          "action": "call",
+          "amount": 0,
+          "phase": "river"
+        },
+        {
+          "player": "p12",
+          "action": "raise",
+          "amount": 29.2,
+          "phase": "flop"
+        },
+        {
+          "player": "p13",
+          "action": "check",
+          "amount": 1.3,
+          "phase": "turn"
+        },
+        {
+          "player": "p14",
+          "action": "call",
+          "amount": 43.6,
+          "phase": "turn"
+        },
+        {
+          "player": "p15",
+          "action": "all_in",
+          "amount": 27.5,
+          "phase": "river"
+        }
+      ],
+      "winner": "p4",
+      "timestamp": "2026-05-21T11:51:54.218436"
+    },
+    {
+      "id": "hand-f95e0d239d43cd2a",
+      "table_id": "tbl-5d905bba16aacbe6",
+      "hand_number": 18,
+      "phase": "turn",
+      "pot": 37.1,
+      "players_count": 8,
+      "actions": [
+        {
+          "player": "p1",
+          "action": "raise",
+          "amount": 44.8,
+          "phase": "turn"
+        },
+        {
+          "player": "p2",
+          "action": "raise",
+          "amount": 0,
+          "phase": "river"
+        },
+        {
+          "player": "p3",
+          "action": "fold",
+          "amount": 46.7,
+          "phase": "turn"
+        },
+        {
+          "player": "p4",
+          "action": "check",
+          "amount": 49.5,
+          "phase": "flop"
+        }
+      ],
+      "winner": "p8",
+      "timestamp": "2026-05-18T11:51:54.218443"
+    },
+    {
+      "id": "hand-69a27916b26ce3a5",
+      "table_id": "tbl-5d905bba16aacbe6",
+      "hand_number": 19,
+      "phase": "river",
+      "pot": 91.9,
+      "players_count": 5,
+      "actions": [
+        {
+          "player": "p1",
+          "action": "call",
+          "amount": 0,
+          "phase": "preflop"
+        },
+        {
+          "player": "p2",
+          "action": "check",
+          "amount": 45.7,
+          "phase": "river"
+        },
+        {
+          "player": "p3",
+          "action": "fold",
+          "amount": 2.3,
+          "phase": "flop"
+        },
+        {
+          "player": "p4",
+          "action": "all_in",
+          "amount": 0,
+          "phase": "preflop"
+        },
+        {
+          "player": "p5",
+          "action": "call",
+          "amount": 25.0,
+          "phase": "preflop"
+        },
+        {
+          "player": "p6",
+          "action": "all_in",
+          "amount": 0,
+          "phase": "turn"
+        },
+        {
+          "player": "p7",
+          "action": "raise",
+          "amount": 4.6,
+          "phase": "river"
+        },
+        {
+          "player": "p8",
+          "action": "call",
+          "amount": 15.7,
+          "phase": "flop"
+        },
+        {
+          "player": "p9",
+          "action": "all_in",
+          "amount": 0,
+          "phase": "preflop"
+        },
+        {
+          "player": "p10",
+          "action": "raise",
+          "amount": 0,
+          "phase": "river"
+        },
+        {
+          "player": "p11",
+          "action": "all_in",
+          "amount": 34.7,
+          "phase": "turn"
+        },
+        {
+          "player": "p12",
+          "action": "raise",
+          "amount": 26.7,
+          "phase": "preflop"
+        },
+        {
+          "player": "p13",
+          "action": "raise",
+          "amount": 7.2,
+          "phase": "river"
+        },
+        {
+          "player": "p14",
+          "action": "call",
+          "amount": 1.8,
+          "phase": "river"
+        },
+        {
+          "player": "p15",
+          "action": "raise",
+          "amount": 7.7,
+          "phase": "turn"
+        },
+        {
+          "player": "p16",
+          "action": "all_in",
+          "amount": 40.1,
+          "phase": "flop"
+        },
+        {
+          "player": "p17",
+          "action": "all_in",
+          "amount": 2.5,
+          "phase": "turn"
+        },
+        {
+          "player": "p18",
+          "action": "raise",
+          "amount": 47.7,
+          "phase": "river"
+        }
+      ],
+      "winner": "p1",
+      "timestamp": "2026-05-22T11:51:54.218459"
+    },
+    {
+      "id": "hand-9fbbcf6f74cb9e96",
+      "table_id": "tbl-5d905bba16aacbe6",
+      "hand_number": 20,
+      "phase": "river",
+      "pot": 9.0,
+      "players_count": 3,
+      "actions": [
+        {
+          "player": "p1",
+          "action": "check",
+          "amount": 45.2,
+          "phase": "flop"
+        },
+        {
+          "player": "p2",
+          "action": "fold",
+          "amount": 0,
+          "phase": "preflop"
+        },
+        {
+          "player": "p3",
+          "action": "check",
+          "amount": 38.9,
+          "phase": "preflop"
+        },
+        {
+          "player": "p4",
+          "action": "fold",
+          "amount": 0,
+          "phase": "preflop"
+        },
+        {
+          "player": "p5",
+          "action": "fold",
+          "amount": 0,
+          "phase": "turn"
+        },
+        {
+          "player": "p6",
+          "action": "all_in",
+          "amount": 18.5,
+          "phase": "flop"
+        }
+      ],
+      "winner": "p1",
+      "timestamp": "2026-05-23T11:51:54.218466"
+    },
+    {
+      "id": "hand-b9489c52e6bd39d3",
+      "table_id": "tbl-5d905bba16aacbe6",
+      "hand_number": 21,
+      "phase": "preflop",
+      "pot": 95.2,
+      "players_count": 8,
+      "actions": [
+        {
+          "player": "p1",
+          "action": "call",
+          "amount": 46.9,
+          "phase": "flop"
+        },
+        {
+          "player": "p2",
+          "action": "check",
+          "amount": 0,
+          "phase": "river"
+        },
+        {
+          "player": "p3",
+          "action": "all_in",
+          "amount": 0,
+          "phase": "preflop"
+        },
+        {
+          "player": "p4",
+          "action": "raise",
+          "amount": 46.8,
+          "phase": "flop"
+        },
+        {
+          "player": "p5",
+          "action": "raise",
+          "amount": 13.5,
+          "phase": "flop"
+        },
+        {
+          "player": "p6",
+          "action": "call",
+          "amount": 17.6,
+          "phase": "turn"
+        },
+        {
+          "player": "p7",
+          "action": "raise",
+          "amount": 0,
+          "phase": "river"
+        },
+        {
+          "player": "p8",
+          "action": "check",
+          "amount": 9.9,
+          "phase": "preflop"
+        },
+        {
+          "player": "p9",
+          "action": "all_in",
+          "amount": 0,
+          "phase": "flop"
+        },
+        {
+          "player": "p10",
+          "action": "all_in",
+          "amount": 11.5,
+          "phase": "turn"
+        },
+        {
+          "player": "p11",
+          "action": "fold",
+          "amount": 3.6,
+          "phase": "turn"
+        },
+        {
+          "player": "p12",
+          "action": "check",
+          "amount": 11.7,
+          "phase": "flop"
+        },
+        {
+          "player": "p13",
+          "action": "call",
+          "amount": 48.0,
+          "phase": "preflop"
+        },
+        {
+          "player": "p14",
+          "action": "call",
+          "amount": 5.3,
+          "phase": "turn"
+        }
+      ],
+      "winner": "p3",
+      "timestamp": "2026-05-22T11:51:54.218479"
+    },
+    {
+      "id": "hand-aac5a793028fb910",
+      "table_id": "tbl-5d905bba16aacbe6",
+      "hand_number": 22,
+      "phase": "preflop",
+      "pot": 74.9,
+      "players_count": 5,
+      "actions": [
+        {
+          "player": "p1",
+          "action": "call",
+          "amount": 36.6,
+          "phase": "flop"
+        },
+        {
+          "player": "p2",
+          "action": "all_in",
+          "amount": 0,
+          "phase": "river"
+        },
+        {
+          "player": "p3",
+          "action": "raise",
+          "amount": 0,
+          "phase": "preflop"
+        }
+      ],
+      "winner": "p3",
+      "timestamp": "2026-05-20T11:51:54.218484"
+    },
+    {
+      "id": "hand-6919f1ed68cbf5cf",
+      "table_id": "tbl-5d905bba16aacbe6",
+      "hand_number": 23,
+      "phase": "preflop",
+      "pot": 2.3,
+      "players_count": 3,
+      "actions": [
+        {
+          "player": "p1",
+          "action": "check",
+          "amount": 22.6,
+          "phase": "turn"
+        },
+        {
+          "player": "p2",
+          "action": "call",
+          "amount": 12.8,
+          "phase": "preflop"
+        },
+        {
+          "player": "p3",
+          "action": "all_in",
+          "amount": 3.6,
+          "phase": "preflop"
+        },
+        {
+          "player": "p4",
+          "action": "check",
+          "amount": 0,
+          "phase": "turn"
+        },
+        {
+          "player": "p5",
+          "action": "fold",
+          "amount": 1.0,
+          "phase": "river"
+        },
+        {
+          "player": "p6",
+          "action": "check",
+          "amount": 35.1,
+          "phase": "flop"
+        },
+        {
+          "player": "p7",
+          "action": "all_in",
+          "amount": 40.5,
+          "phase": "preflop"
+        },
+        {
+          "player": "p8",
+          "action": "check",
+          "amount": 29.6,
+          "phase": "flop"
+        },
+        {
+          "player": "p9",
+          "action": "fold",
+          "amount": 37.8,
+          "phase": "flop"
+        },
+        {
+          "player": "p10",
+          "action": "call",
+          "amount": 43.3,
+          "phase": "river"
+        },
+        {
+          "player": "p11",
+          "action": "all_in",
+          "amount": 25.1,
+          "phase": "flop"
+        },
+        {
+          "player": "p12",
+          "action": "call",
+          "amount": 40.7,
+          "phase": "turn"
+        },
+        {
+          "player": "p13",
+          "action": "check",
+          "amount": 0,
+          "phase": "turn"
+        },
+        {
+          "player": "p14",
+          "action": "fold",
+          "amount": 3.0,
+          "phase": "flop"
+        },
+        {
+          "player": "p15",
+          "action": "fold",
+          "amount": 49.7,
+          "phase": "river"
+        },
+        {
+          "player": "p16",
+          "action": "all_in",
+          "amount": 49.0,
+          "phase": "turn"
+        },
+        {
+          "player": "p17",
+          "action": "fold",
+          "amount": 15.2,
+          "phase": "turn"
+        },
+        {
+          "player": "p18",
+          "action": "check",
+          "amount": 7.3,
+          "phase": "river"
+        },
+        {
+          "player": "p19",
+          "action": "call",
+          "amount": 44.6,
+          "phase": "preflop"
+        },
+        {
+          "player": "p20",
+          "action": "check",
+          "amount": 20.9,
+          "phase": "preflop"
+        }
+      ],
+      "winner": "p1",
+      "timestamp": "2026-05-23T11:51:54.218502"
+    },
+    {
+      "id": "hand-f1423bb7c0d59639",
+      "table_id": "tbl-5d905bba16aacbe6",
+      "hand_number": 24,
+      "phase": "turn",
+      "pot": 93.6,
+      "players_count": 5,
+      "actions": [
+        {
+          "player": "p1",
+          "action": "call",
+          "amount": 10.5,
+          "phase": "river"
+        },
+        {
+          "player": "p2",
+          "action": "call",
+          "amount": 0,
+          "phase": "turn"
+        },
+        {
+          "player": "p3",
+          "action": "call",
+          "amount": 24.4,
+          "phase": "preflop"
+        },
+        {
+          "player": "p4",
+          "action": "raise",
+          "amount": 0,
+          "phase": "turn"
+        },
+        {
+          "player": "p5",
+          "action": "call",
+          "amount": 0,
+          "phase": "river"
+        },
+        {
+          "player": "p6",
+          "action": "raise",
+          "amount": 0,
+          "phase": "river"
+        },
+        {
+          "player": "p7",
+          "action": "check",
+          "amount": 21.9,
+          "phase": "flop"
+        },
+        {
+          "player": "p8",
+          "action": "check",
+          "amount": 0,
+          "phase": "preflop"
+        },
+        {
+          "player": "p9",
+          "action": "check",
+          "amount": 3.1,
+          "phase": "flop"
+        },
+        {
+          "player": "p10",
+          "action": "check",
+          "amount": 49.9,
+          "phase": "turn"
+        },
+        {
+          "player": "p11",
+          "action": "all_in",
+          "amount": 0,
+          "phase": "preflop"
+        },
+        {
+          "player": "p12",
+          "action": "fold",
+          "amount": 49.5,
+          "phase": "river"
+        },
+        {
+          "player": "p13",
+          "action": "check",
+          "amount": 8.5,
+          "phase": "turn"
+        }
+      ],
+      "winner": "p4",
+      "timestamp": "2026-05-18T11:51:54.218514"
+    },
+    {
+      "id": "hand-2bceb4f6373820a9",
+      "table_id": "tbl-5d905bba16aacbe6",
+      "hand_number": 25,
+      "phase": "river",
+      "pot": 34.0,
+      "players_count": 9,
+      "actions": [
+        {
+          "player": "p1",
+          "action": "fold",
+          "amount": 0,
+          "phase": "turn"
+        },
+        {
+          "player": "p2",
+          "action": "fold",
+          "amount": 0,
+          "phase": "preflop"
+        },
+        {
+          "player": "p3",
+          "action": "check",
+          "amount": 0,
+          "phase": "river"
+        }
+      ],
+      "winner": "p6",
+      "timestamp": "2026-05-24T11:51:54.218519"
+    },
+    {
+      "id": "hand-f9f72fdaed5730d3",
+      "table_id": "tbl-5d905bba16aacbe6",
+      "hand_number": 26,
+      "phase": "flop",
+      "pot": 95.4,
+      "players_count": 8,
+      "actions": [
+        {
+          "player": "p1",
+          "action": "raise",
+          "amount": 23.5,
+          "phase": "turn"
+        },
+        {
+          "player": "p2",
+          "action": "fold",
+          "amount": 0,
+          "phase": "flop"
+        },
+        {
+          "player": "p3",
+          "action": "fold",
+          "amount": 0,
+          "phase": "flop"
+        },
+        {
+          "player": "p4",
+          "action": "check",
+          "amount": 0,
+          "phase": "turn"
+        },
+        {
+          "player": "p5",
+          "action": "call",
+          "amount": 48.2,
+          "phase": "turn"
+        },
+        {
+          "player": "p6",
+          "action": "fold",
+          "amount": 0,
+          "phase": "river"
+        },
+        {
+          "player": "p7",
+          "action": "raise",
+          "amount": 42.0,
+          "phase": "river"
+        },
+        {
+          "player": "p8",
+          "action": "check",
+          "amount": 0,
+          "phase": "turn"
+        },
+        {
+          "player": "p9",
+          "action": "raise",
+          "amount": 0,
+          "phase": "preflop"
+        },
+        {
+          "player": "p10",
+          "action": "fold",
+          "amount": 9.0,
+          "phase": "turn"
+        },
+        {
+          "player": "p11",
+          "action": "check",
+          "amount": 0,
+          "phase": "turn"
+        },
+        {
+          "player": "p12",
+          "action": "call",
+          "amount": 36.8,
+          "phase": "turn"
+        },
+        {
+          "player": "p13",
+          "action": "call",
+          "amount": 27.4,
+          "phase": "flop"
+        },
+        {
+          "player": "p14",
+          "action": "all_in",
+          "amount": 18.0,
+          "phase": "preflop"
+        },
+        {
+          "player": "p15",
+          "action": "check",
+          "amount": 7.5,
+          "phase": "preflop"
+        },
+        {
+          "player": "p16",
+          "action": "raise",
+          "amount": 0,
+          "phase": "flop"
+        },
+        {
+          "player": "p17",
+          "action": "raise",
+          "amount": 36.9,
+          "phase": "turn"
+        },
+        {
+          "player": "p18",
+          "action": "check",
+          "amount": 34.8,
+          "phase": "turn"
+        },
+        {
+          "player": "p19",
+          "action": "all_in",
+          "amount": 3.4,
+          "phase": "turn"
+        },
+        {
+          "player": "p20",
+          "action": "check",
+          "amount": 22.1,
+          "phase": "preflop"
+        }
+      ],
+      "winner": "p1",
+      "timestamp": "2026-05-22T11:51:54.218538"
+    },
+    {
+      "id": "hand-565438fe451d23ef",
+      "table_id": "tbl-5d905bba16aacbe6",
+      "hand_number": 27,
+      "phase": "turn",
+      "pot": 39.1,
+      "players_count": 9,
+      "actions": [
+        {
+          "player": "p1",
+          "action": "fold",
+          "amount": 41.4,
+          "phase": "river"
+        },
+        {
+          "player": "p2",
+          "action": "all_in",
+          "amount": 12.9,
+          "phase": "preflop"
+        },
+        {
+          "player": "p3",
+          "action": "fold",
+          "amount": 0,
+          "phase": "flop"
+        },
+        {
+          "player": "p4",
+          "action": "all_in",
+          "amount": 0,
+          "phase": "turn"
+        },
+        {
+          "player": "p5",
+          "action": "fold",
+          "amount": 47.3,
+          "phase": "turn"
+        },
+        {
+          "player": "p6",
+          "action": "call",
+          "amount": 44.6,
+          "phase": "river"
+        },
+        {
+          "player": "p7",
+          "action": "all_in",
+          "amount": 0,
+          "phase": "preflop"
+        },
+        {
+          "player": "p8",
+          "action": "fold",
+          "amount": 29.2,
+          "phase": "flop"
+        },
+        {
+          "player": "p9",
+          "action": "all_in",
+          "amount": 28.1,
+          "phase": "flop"
+        },
+        {
+          "player": "p10",
+          "action": "check",
+          "amount": 7.1,
+          "phase": "preflop"
+        },
+        {
+          "player": "p11",
+          "action": "check",
+          "amount": 0,
+          "phase": "turn"
+        },
+        {
+          "player": "p12",
+          "action": "all_in",
+          "amount": 16.9,
+          "phase": "preflop"
+        },
+        {
+          "player": "p13",
+          "action": "check",
+          "amount": 39.5,
+          "phase": "river"
+        },
+        {
+          "player": "p14",
+          "action": "all_in",
+          "amount": 5.1,
+          "phase": "preflop"
+        },
+        {
+          "player": "p15",
+          "action": "all_in",
+          "amount": 26.3,
+          "phase": "flop"
+        },
+        {
+          "player": "p16",
+          "action": "call",
+          "amount": 24.4,
+          "phase": "river"
+        },
+        {
+          "player": "p17",
+          "action": "call",
+          "amount": 0,
+          "phase": "turn"
+        },
+        {
+          "player": "p18",
+          "action": "raise",
+          "amount": 40.4,
+          "phase": "turn"
+        },
+        {
+          "player": "p19",
+          "action": "all_in",
+          "amount": 0,
+          "phase": "flop"
+        }
+      ],
+      "winner": "p9",
+      "timestamp": "2026-05-18T11:51:54.218554"
+    },
+    {
+      "id": "hand-95c576f9ec9c24b1",
+      "table_id": "tbl-5d905bba16aacbe6",
+      "hand_number": 28,
+      "phase": "flop",
+      "pot": 31.4,
+      "players_count": 7,
+      "actions": [
+        {
+          "player": "p1",
+          "action": "check",
+          "amount": 45.7,
+          "phase": "river"
+        },
+        {
+          "player": "p2",
+          "action": "all_in",
+          "amount": 12.4,
+          "phase": "turn"
+        },
+        {
+          "player": "p3",
+          "action": "all_in",
+          "amount": 18.3,
+          "phase": "turn"
+        },
+        {
+          "player": "p4",
+          "action": "all_in",
+          "amount": 24.5,
+          "phase": "preflop"
+        },
+        {
+          "player": "p5",
+          "action": "call",
+          "amount": 31.5,
+          "phase": "flop"
+        },
+        {
+          "player": "p6",
+          "action": "raise",
+          "amount": 0,
+          "phase": "flop"
+        },
+        {
+          "player": "p7",
+          "action": "all_in",
+          "amount": 42.5,
+          "phase": "river"
+        },
+        {
+          "player": "p8",
+          "action": "raise",
+          "amount": 21.9,
+          "phase": "flop"
+        },
+        {
+          "player": "p9",
+          "action": "fold",
+          "amount": 0,
+          "phase": "turn"
+        },
+        {
+          "player": "p10",
+          "action": "raise",
+          "amount": 0,
+          "phase": "turn"
+        },
+        {
+          "player": "p11",
+          "action": "call",
+          "amount": 48.5,
+          "phase": "preflop"
+        },
+        {
+          "player": "p12",
+          "action": "fold",
+          "amount": 3.0,
+          "phase": "turn"
+        },
+        {
+          "player": "p13",
+          "action": "call",
+          "amount": 30.3,
+          "phase": "river"
+        },
+        {
+          "player": "p14",
+          "action": "fold",
+          "amount": 49.1,
+          "phase": "preflop"
+        }
+      ],
+      "winner": "p4",
+      "timestamp": "2026-05-20T11:51:54.218568"
+    },
+    {
+      "id": "hand-02be8c2e10c28c07",
+      "table_id": "tbl-5d905bba16aacbe6",
+      "hand_number": 29,
+      "phase": "river",
+      "pot": 32.3,
+      "players_count": 10,
+      "actions": [
+        {
+          "player": "p1",
+          "action": "check",
+          "amount": 0,
+          "phase": "preflop"
+        },
+        {
+          "player": "p2",
+          "action": "call",
+          "amount": 0,
+          "phase": "turn"
+        },
+        {
+          "player": "p3",
+          "action": "raise",
+          "amount": 17.6,
+          "phase": "river"
+        },
+        {
+          "player": "p4",
+          "action": "all_in",
+          "amount": 33.8,
+          "phase": "preflop"
+        },
+        {
+          "player": "p5",
+          "action": "all_in",
+          "amount": 4.4,
+          "phase": "turn"
+        },
+        {
+          "player": "p6",
+          "action": "check",
+          "amount": 9.3,
+          "phase": "flop"
+        }
+      ],
+      "winner": "p3",
+      "timestamp": "2026-05-18T11:51:54.218576"
+    },
+    {
+      "id": "hand-f5b84102ed82a24a",
+      "table_id": "tbl-5d905bba16aacbe6",
+      "hand_number": 30,
+      "phase": "flop",
+      "pot": 20.3,
+      "players_count": 5,
+      "actions": [
+        {
+          "player": "p1",
+          "action": "check",
+          "amount": 25.7,
+          "phase": "river"
+        },
+        {
+          "player": "p2",
+          "action": "raise",
+          "amount": 12.0,
+          "phase": "flop"
+        },
+        {
+          "player": "p3",
+          "action": "call",
+          "amount": 0,
+          "phase": "preflop"
+        },
+        {
+          "player": "p4",
+          "action": "raise",
+          "amount": 8.7,
+          "phase": "flop"
+        },
+        {
+          "player": "p5",
+          "action": "check",
+          "amount": 0,
+          "phase": "flop"
+        },
+        {
+          "player": "p6",
+          "action": "call",
+          "amount": 45.9,
+          "phase": "flop"
+        },
+        {
+          "player": "p7",
+          "action": "fold",
+          "amount": 47.5,
+          "phase": "river"
+        },
+        {
+          "player": "p8",
+          "action": "fold",
+          "amount": 0,
+          "phase": "river"
+        },
+        {
+          "player": "p9",
+          "action": "fold",
+          "amount": 25.4,
+          "phase": "preflop"
+        },
+        {
+          "player": "p10",
+          "action": "fold",
+          "amount": 12.4,
+          "phase": "river"
+        },
+        {
+          "player": "p11",
+          "action": "all_in",
+          "amount": 14.6,
+          "phase": "preflop"
+        },
+        {
+          "player": "p12",
+          "action": "raise",
+          "amount": 32.9,
+          "phase": "preflop"
+        },
+        {
+          "player": "p13",
+          "action": "call",
+          "amount": 28.2,
+          "phase": "river"
+        },
+        {
+          "player": "p14",
+          "action": "check",
+          "amount": 0,
+          "phase": "flop"
+        },
+        {
+          "player": "p15",
+          "action": "raise",
+          "amount": 0,
+          "phase": "flop"
+        }
+      ],
+      "winner": "p3",
+      "timestamp": "2026-05-18T11:51:54.218593"
+    }
+  ]
+}

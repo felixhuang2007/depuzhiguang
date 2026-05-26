@@ -1,9 +1,10 @@
 import 'dart:async';
 import 'dart:convert';
-import 'package:web_socket_channel/web_socket_channel.dart';
+import 'dart:io';
+import 'package:web_socket_channel/io.dart';
 
 class WebSocketService {
-  WebSocketChannel? _channel;
+  IOWebSocketChannel? _channel;
   final _messageController = StreamController<Map<String, dynamic>>.broadcast();
   final _connectionController = StreamController<bool>.broadcast();
   Timer? _reconnectTimer;
@@ -22,8 +23,8 @@ class WebSocketService {
   }
 
   void _connect(String url) {
-    try {
-      _channel = WebSocketChannel.connect(Uri.parse(url));
+    WebSocket.connect(url).then((ws) {
+      _channel = IOWebSocketChannel(ws);
       _connectionController.add(true);
       _reconnectDelay = 1; // reset on success
       _channel!.stream.listen(
@@ -38,9 +39,7 @@ class WebSocketService {
         onError: (_) => _scheduleReconnect(),
         onDone: () => _scheduleReconnect(),
       );
-    } catch (_) {
-      _scheduleReconnect();
-    }
+    }).catchError((_) => _scheduleReconnect());
   }
 
   void _scheduleReconnect() {
