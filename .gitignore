@@ -4,3 +4,25 @@ dist/
 *.log
 .DS_Store
 .claude/
+
+# Temporary files
+*.mp4
+*.tar.gz
+emulator_screenshot*.png
+flutter_test*.png
+
+# Deployment scripts
+deploy_*.py
+deploy_*.sh
+fix_*.py
+diagnose_*.py
+
+# Database backups
+*.db.bak
+*.db-journal
+
+# Generated docs (temporary)
+docs/testing/
+
+# Superpowers temp
+.superpowers/
