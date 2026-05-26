@@ -67,6 +67,21 @@ func NewServer(addr string, apiBaseURL string, logg *slog.Logger) *Server {
 		s.logg.Error("failed to create table", "error", err)
 	}
 
+	// Create t1 table (matches Flutter app mock lobby)
+	if _, err := tm.CreateTable(table.TableConfig{
+		ID:          "t1",
+		Name:        "经典六人桌",
+		MaxSeats:    6,
+		SmallBlind:  5,
+		BigBlind:    10,
+		MinBuyIn:    500,
+		MaxBuyIn:    5000,
+		RakePercent: 0.05,
+		RakeCap:     3,
+	}); err != nil {
+		s.logg.Error("failed to create table", "error", err)
+	}
+
 	// Create simulation tables (match bot-service scheduler)
 	simTableNames := []string{"sim-table-0", "sim-table-1", "sim-table-2"}
 	for _, name := range simTableNames {
