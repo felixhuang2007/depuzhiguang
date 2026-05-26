@@ -42,6 +42,17 @@ app.use('/api/payments', paymentRoutes);
 app.use('/api/sim', simRoutes);
 app.use('/api/tables', tableRoutes);
 
+// Proxy lobby tables from game-server
+app.get('/lobby/tables', async (_req, res, next) => {
+  try {
+    const response = await fetch('http://game-server:8080/lobby/tables');
+    const data = await response.json();
+    res.json(data);
+  } catch (err) {
+    next(err);
+  }
+});
+
 app.use(errorHandler);
 
 export default app;
