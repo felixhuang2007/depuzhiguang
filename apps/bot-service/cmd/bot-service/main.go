@@ -35,7 +35,7 @@ func main() {
 
 	// Step 1: Register users
 	reg := registrar.NewRegistrar(*apiURL)
-	profiles, _, err := reg.RegisterBatch(*count)
+	profiles, tokens, err := reg.RegisterBatch(*count)
 	if err != nil {
 		logg.Error("failed to register users", "error", err)
 		os.Exit(1)
@@ -44,13 +44,15 @@ func main() {
 
 	// Step 2: Setup dynamic scheduler
 	userIDs := make([]string, len(profiles))
+	tokenMap := make(map[string]string, len(profiles))
 	for i, p := range profiles {
 		userIDs[i] = p.UserID
+		tokenMap[p.UserID] = tokens[i]
 	}
 	ds := scheduler.NewDynamicScheduler(*apiURL, userIDs)
 
 	// Step 3: Setup manager
-	mgr := manager.NewManager(*wsURL, *apiURL)
+	mgr := manager.NewManager(*wsURL, *apiURL, tokenMap)
 
 	// Step 5: Create bots with personas
 	personas := ai.AllPersonas()

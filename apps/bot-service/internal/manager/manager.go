@@ -1,10 +1,14 @@
 package manager
 
 import (
+	"bytes"
 	"context"
+	"encoding/json"
 	"fmt"
 	"log"
+	"net/http"
 	"sync"
+	"time"
 
 	"github.com/depuzhiguang/bot-service/internal/ai"
 	"github.com/depuzhiguang/bot-service/internal/client"
@@ -27,14 +31,18 @@ type Manager struct {
 	mu        sync.RWMutex
 	tables    map[string][]string
 	wsURL     string
+	apiURL    string
+	tokens    map[string]string
 	collector *collector.Collector
 }
 
-func NewManager(wsURL, apiURL string) *Manager {
+func NewManager(wsURL, apiURL string, tokens map[string]string) *Manager {
 	return &Manager{
 		bots:      make(map[string]*Bot),
 		tables:    make(map[string][]string),
 		wsURL:     wsURL,
+		apiURL:    apiURL,
+		tokens:    tokens,
 		collector: collector.NewCollector(apiURL),
 	}
 }
@@ -84,6 +92,26 @@ func (m *Manager) AssignToTable(botID, tableID string) error {
 	if !ok {
 		return fmt.Errorf("bot not found: %s", botID)
 	}
+
+	// Call REST API to join table first (creates TablePlayer record)
+	token, hasToken := m.tokens[botID]
+	if hasToken {
+		payload, _ := json.Marshal(map[string]interface{}{"tableId": tableID})
+		req, _ := http.NewRequest("POST", m.apiURL+"/api/tables/"+tableID+"/join", bytes.NewReader(payload))
+		req.Header.Set("Content-Type", "application/json")
+		req.Header.Set("Authorization", "Bearer "+token)
+		client := &http.Client{Timeout: 10 * time.Second}
+		resp, err := client.Do(req)
+		if err != nil {
+			log.Printf("[%s] Join table API call failed: %v", botID, err)
+		} else {
+			resp.Body.Close()
+			if resp.StatusCode != http.StatusOK && resp.StatusCode != http.StatusCreated {
+				log.Printf("[%s] Join table API returned status %d", botID, resp.StatusCode)
+			}
+		}
+	}
+
 	bot.TableID = tableID
 	bot.Status = "playing"
 

@@ -16,6 +16,7 @@ type SimProfile struct {
 	Nickname    string `json:"nickname"`
 	Style       string `json:"style"`
 	InitialGold int    `json:"initialGold"`
+	Token       string `json:"-"`
 }
 
 type Registrar struct {
@@ -133,6 +134,7 @@ func (r *Registrar) RegisterBatch(count int) ([]SimProfile, []string, error) {
 			return nil, nil, fmt.Errorf("register user %d: %w", i, err)
 		}
 		profiles[i].UserID = userID
+		profiles[i].Token = token
 		tokens[i] = token
 		time.Sleep(100 * time.Millisecond) // Rate limit friendly
 	}

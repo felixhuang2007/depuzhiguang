@@ -7,14 +7,14 @@ import (
 )
 
 func TestManager_Spawn(t *testing.T) {
-	m := NewManager("ws://localhost:8080/ws", "http://localhost:3000")
+	m := NewManager("ws://localhost:8080/ws", "http://localhost:3000", nil)
 	m.Spawn(10)
 	stats := m.Stats()
 	assert.Equal(t, 10, stats["total"])
 }
 
 func TestManager_AssignToTable(t *testing.T) {
-	m := NewManager("ws://localhost:8080/ws", "http://localhost:3000")
+	m := NewManager("ws://localhost:8080/ws", "http://localhost:3000", nil)
 	m.Spawn(5)
 
 	var botID string
@@ -30,7 +30,7 @@ func TestManager_AssignToTable(t *testing.T) {
 }
 
 func TestManager_StopAll(t *testing.T) {
-	m := NewManager("ws://localhost:8080/ws", "http://localhost:3000")
+	m := NewManager("ws://localhost:8080/ws", "http://localhost:3000", nil)
 	m.Spawn(5)
 	m.StopAll()
 	stats := m.Stats()
