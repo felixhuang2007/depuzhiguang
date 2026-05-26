@@ -50,7 +50,7 @@ export async function joinTable(
     }
   }
 
-  if (seat === undefined) {
+  if (seat == null) {
     throw new Error('Table is full');
   }
 
