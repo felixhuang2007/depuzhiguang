@@ -29,7 +29,11 @@ router.post('/register', async (req, res, next) => {
       simPersonality: data.simPersonality,
     });
     res.status(201).json(user);
-  } catch (err) {
+  } catch (err: any) {
+    if (err.message === 'Username or email already exists') {
+      res.status(409).json({ error: err.message });
+      return;
+    }
     next(err);
   }
 });
