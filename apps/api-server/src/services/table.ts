@@ -9,18 +9,19 @@ export async function joinTable(
   userId: string,
   opts?: { seat?: number; chips?: number }
 ) {
+  const user = await prisma.user.findUnique({
+    where: { id: userId },
+    select: { gold: true },
+  });
+
   const existing = await prisma.tablePlayer.findUnique({
     where: { tableId_userId: { tableId, userId } },
   });
 
   if (existing && existing.status === 'active') {
-    throw new Error('Already seated at this table');
+    // Already seated — return existing player without deducting gold again
+    return { tablePlayer: existing, remainingGold: user?.gold ?? 0 };
   }
-
-  const user = await prisma.user.findUnique({
-    where: { id: userId },
-    select: { gold: true },
-  });
 
   if (!user) {
     throw new Error('User not found');
