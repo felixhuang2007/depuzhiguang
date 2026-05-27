@@ -66,6 +66,14 @@ export async function joinTable(
     }
 
     const result = await prisma.$transaction(async (tx) => {
+      // If another (non-active) record holds this seat, clear it first to avoid unique constraint conflict
+      if (seatTaken && seatTaken.id !== existing.id) {
+        await tx.tablePlayer.update({
+          where: { id: seatTaken.id },
+          data: { seat: -1 },
+        });
+      }
+
       const updatedUser = await tx.user.update({
         where: { id: userId },
         data: { gold: { decrement: buyinGold } },
