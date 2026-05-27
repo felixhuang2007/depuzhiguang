@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
+	"log"
 	"net/http"
 	"time"
 )
@@ -117,6 +118,16 @@ func (r *Registrar) loginUser(profile SimProfile) (string, string, error) {
 	return result.User.ID, result.AccessToken, nil
 }
 
+func (r *Registrar) ensureGold(userID string) error {
+	payload, _ := json.Marshal(map[string]interface{}{"user_id": userID})
+	resp, err := r.client.Post(r.apiBaseURL+"/api/sim/refill", "application/json", bytes.NewReader(payload))
+	if err != nil {
+		return err
+	}
+	defer resp.Body.Close()
+	return nil
+}
+
 func (r *Registrar) RegisterBatch(count int) ([]SimProfile, []string, error) {
 	personas := []string{
 		"tight_aggressive", "loose_aggressive", "nit", "loose_passive",
@@ -132,6 +143,10 @@ func (r *Registrar) RegisterBatch(count int) ([]SimProfile, []string, error) {
 		userID, token, err := r.RegisterUser(profiles[i])
 		if err != nil {
 			return nil, nil, fmt.Errorf("register user %d: %w", i, err)
+		}
+		// Ensure sim user has enough gold after register/login
+		if err := r.ensureGold(userID); err != nil {
+			log.Printf("[registrar] ensureGold failed for %s: %v", userID, err)
 		}
 		profiles[i].UserID = userID
 		profiles[i].Token = token

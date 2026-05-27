@@ -106,7 +106,25 @@ func (m *Manager) AssignToTable(botID, tableID string) error {
 			log.Printf("[%s] Join table API call failed: %v", botID, err)
 		} else {
 			resp.Body.Close()
-			if resp.StatusCode != http.StatusOK && resp.StatusCode != http.StatusCreated {
+			if resp.StatusCode == http.StatusInternalServerError {
+				// Likely insufficient gold — trigger refill and retry once
+				log.Printf("[%s] Join returned 500, attempting gold refill", botID)
+				refillPayload, _ := json.Marshal(map[string]interface{}{"user_id": botID})
+				refillReq, _ := http.NewRequest("POST", m.apiURL+"/api/sim/refill", bytes.NewReader(refillPayload))
+				refillReq.Header.Set("Content-Type", "application/json")
+				if refillResp, refillErr := client.Do(refillReq); refillErr == nil {
+					refillResp.Body.Close()
+					log.Printf("[%s] Gold refill attempted, status %d", botID, refillResp.StatusCode)
+					// Retry join
+					retryReq, _ := http.NewRequest("POST", m.apiURL+"/api/tables/"+tableID+"/join", bytes.NewReader(payload))
+					retryReq.Header.Set("Content-Type", "application/json")
+					retryReq.Header.Set("Authorization", "Bearer "+token)
+					if retryResp, retryErr := client.Do(retryReq); retryErr == nil {
+						retryResp.Body.Close()
+						log.Printf("[%s] Retry join status %d", botID, retryResp.StatusCode)
+					}
+				}
+			} else if resp.StatusCode != http.StatusOK && resp.StatusCode != http.StatusCreated {
 				log.Printf("[%s] Join table API returned status %d", botID, resp.StatusCode)
 			}
 		}
