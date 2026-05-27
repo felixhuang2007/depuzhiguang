@@ -74,8 +74,8 @@ func NewServer(addr string, apiBaseURL string, logg *slog.Logger) *Server {
 		MaxSeats:    6,
 		SmallBlind:  5,
 		BigBlind:    10,
-		MinBuyIn:    500,
-		MaxBuyIn:    5000,
+		MinBuyIn:    50,
+		MaxBuyIn:    200,
 		RakePercent: 0.05,
 		RakeCap:     3,
 	}); err != nil {
