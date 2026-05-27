@@ -27,6 +27,77 @@ export async function joinTable(
     throw new Error('User not found');
   }
 
+  // User has a previous left record — rejoin by updating it
+  if (existing && existing.status !== 'active') {
+    const buyinGold = opts?.chips
+      ? Math.ceil(opts.chips / EXCHANGE_RATE)
+      : DEFAULT_BUYIN_GOLD;
+    const buyinChips = opts?.chips ?? DEFAULT_BUYIN_CHIPS;
+
+    if (user.gold < buyinGold) {
+      throw new Error('Insufficient gold');
+    }
+
+    let seat = opts?.seat;
+    if (seat == null) {
+      const activePlayers = await prisma.tablePlayer.findMany({
+        where: { tableId, status: 'active' },
+        select: { seat: true },
+      });
+      const takenSeats = new Set(activePlayers.map((p) => p.seat));
+      for (let i = 0; i < 10; i++) {
+        if (!takenSeats.has(i)) {
+          seat = i;
+          break;
+        }
+      }
+    }
+
+    if (seat == null) {
+      throw new Error('Table is full');
+    }
+
+    const seatTaken = await prisma.tablePlayer.findUnique({
+      where: { tableId_seat: { tableId, seat } },
+    });
+
+    if (seatTaken && seatTaken.status === 'active' && seatTaken.id !== existing.id) {
+      throw new Error('Seat is already taken');
+    }
+
+    const result = await prisma.$transaction(async (tx) => {
+      const updatedUser = await tx.user.update({
+        where: { id: userId },
+        data: { gold: { decrement: buyinGold } },
+        select: { gold: true },
+      });
+
+      const tablePlayer = await tx.tablePlayer.update({
+        where: { id: existing.id },
+        data: {
+          seat,
+          chips: buyinChips,
+          status: 'active',
+          leftAt: null,
+        },
+      });
+
+      await tx.exchangeRecord.create({
+        data: {
+          userId,
+          tableId,
+          type: 'buyin',
+          goldAmount: buyinGold,
+          chipsAmount: buyinChips,
+        },
+      });
+
+      return { tablePlayer, remainingGold: updatedUser.gold };
+    });
+
+    return result;
+  }
+
   const buyinGold = opts?.chips
     ? Math.ceil(opts.chips / EXCHANGE_RATE)
     : DEFAULT_BUYIN_GOLD;
