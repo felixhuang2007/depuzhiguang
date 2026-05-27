@@ -198,6 +198,28 @@ func (m *Manager) UnassignFromTable(botID string) error {
 		return fmt.Errorf("bot not found: %s", botID)
 	}
 
+	tableID := bot.TableID
+
+	// Call REST API to leave table first (returns gold)
+	if tableID != "" {
+		token, hasToken := m.tokens[botID]
+		if hasToken {
+			req, _ := http.NewRequest("POST", m.apiURL+"/api/tables/"+tableID+"/leave", nil)
+			req.Header.Set("Content-Type", "application/json")
+			req.Header.Set("Authorization", "Bearer "+token)
+			client := &http.Client{Timeout: 10 * time.Second}
+			resp, err := client.Do(req)
+			if err != nil {
+				log.Printf("[%s] Leave table API call failed: %v", botID, err)
+			} else {
+				resp.Body.Close()
+				if resp.StatusCode != http.StatusOK {
+					log.Printf("[%s] Leave table API returned status %d", botID, resp.StatusCode)
+				}
+			}
+		}
+	}
+
 	if bot.client != nil {
 		bot.client.Leave()
 	}
