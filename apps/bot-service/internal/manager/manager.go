@@ -50,21 +50,16 @@ func NewManager(wsURL, apiURL string, tokens map[string]string) *Manager {
 func (m *Manager) Spawn(count int) {
 	m.mu.Lock()
 	defer m.mu.Unlock()
+	personas := ai.AllPersonas()
+	positions := []string{"BTN", "CO", "MP", "UTG", "BB", "SB"}
 	for i := 0; i < count; i++ {
 		profile := identity.GenerateProfile(i)
-		diff := ai.Regular
-		switch i % 20 {
-		case 0, 1, 2, 3, 4, 5:
-			diff = ai.Fish
-		case 16, 17, 18:
-			diff = ai.Shark
-		case 19:
-			diff = ai.Whale
-		}
+		persona := personas[i%len(personas)]
+		pos := positions[i%len(positions)]
 		ctx, cancel := context.WithCancel(context.Background())
 		m.bots[profile.ID] = &Bot{
 			Profile: profile,
-			Engine:  ai.NewEngine(diff, "BTN"),
+			Engine:  ai.NewEngineWithPersona(ai.GetPersona(persona), pos),
 			Status:  "idle",
 			ctx:     ctx,
 			cancel:  cancel,

@@ -21,9 +21,9 @@ func TestEngine_Decide_CallWithStrongHand(t *testing.T) {
 
 func TestEngine_Decide_BetStrongHand(t *testing.T) {
 	engine := NewEngine(Shark, "CO")
-	// AA with no bet should bet or check (strength = 0.6, threshold is > 0.6)
+	// AA preflop with no bet should raise (premium hand)
 	decision := engine.Decide([]string{"AH", "AD"}, nil, 100, 0, 1000, 20)
-	assert.Contains(t, []string{"bet", "check"}, decision.Action)
+	assert.Contains(t, []string{"raise", "bet"}, decision.Action)
 }
 
 func TestEngine_PersonaDrivenDecision(t *testing.T) {

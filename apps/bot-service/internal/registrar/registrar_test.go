@@ -79,7 +79,9 @@ func TestRegistrar_RegisterUser_Error(t *testing.T) {
 func TestRegistrar_RegisterBatch(t *testing.T) {
 	registered := 0
 	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		registered++
+		if r.URL.Path == "/api/auth/register" {
+			registered++
+		}
 		w.WriteHeader(http.StatusCreated)
 		fmt.Fprintf(w, `{"id":"user-%d","accessToken":"tok"}`, registered)
 	}))
