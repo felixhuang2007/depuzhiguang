@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"log/slog"
 	"sync"
+	"time"
 
 	"github.com/depuzhiguang/game-server/internal/table"
 )
@@ -18,8 +19,9 @@ type TableManager struct {
 }
 
 type tableManagerEntry struct {
-	Table *table.Table
-	Game  *table.Game
+	Table       *table.Table
+	Game        *table.Game
+	actionTimer *time.Timer
 }
 
 // NewTableManager creates a new table manager.
@@ -186,6 +188,11 @@ func (tm *TableManager) HandleLeave(payload LeaveTablePayload) error {
 		},
 	})
 
+	// Clear game if not enough players to continue
+	if t.PlayerCount() < 2 {
+		entry.Game = nil
+	}
+
 	if tm.lobby != nil {
 		go tm.lobby.BroadcastTablesUpdate()
 	}
@@ -207,6 +214,12 @@ func (tm *TableManager) HandleAction(payload ActionPayload) error {
 		return fmt.Errorf("no active game")
 	}
 
+	// Cancel any existing action timer since player is acting
+	if entry.actionTimer != nil {
+		entry.actionTimer.Stop()
+		entry.actionTimer = nil
+	}
+
 	action := table.Action{
 		PlayerID: payload.PlayerID,
 		Type:     payload.Action,
@@ -219,8 +232,8 @@ func (tm *TableManager) HandleAction(payload ActionPayload) error {
 
 	tm.broadcastGameState(payload.TableID, entry)
 
-	// Check if hand is complete
-	if entry.Game.State == table.StateComplete {
+	// Check if hand is complete or reached showdown
+	if entry.Game.State == table.StateComplete || entry.Game.State == table.StateShowdown {
 		// Broadcast hand result
 		tm.broadcastHandResult(payload.TableID, entry)
 		// Reset for next hand after a delay
@@ -263,12 +276,74 @@ func (tm *TableManager) sendStateSnapshot(playerID string, entry *tableManagerEn
 		payload.Community = g.Community
 		payload.CurrentTurn = g.CurrentTurn
 		payload.Button = g.Button
+		payload.BigBlind = t.Config.BigBlind
 		if g.Pot != nil {
 			payload.Pot = g.Pot.Total()
+		}
+		// Minimum raise is at least the big blind or the last raise size
+		if g.LastRaise > 0 {
+			payload.MinRaise = g.LastRaise
+		} else {
+			payload.MinRaise = t.Config.BigBlind
 		}
 	}
 
 	tm.hub.SendToPlayer(playerID, Message{Type: MsgStateSnapshot, Payload: payload})
+}
+
+func (tm *TableManager) startActionTimer(tableID string, entry *tableManagerEntry) {
+	// Cancel existing timer
+	if entry.actionTimer != nil {
+		entry.actionTimer.Stop()
+		entry.actionTimer = nil
+	}
+
+	// Only start timer if game is active and waiting for player action
+	if entry.Game == nil || entry.Game.State == table.StateComplete || entry.Game.State == table.StateShowdown {
+		return
+	}
+
+	currentSeat := entry.Game.CurrentTurn
+	if currentSeat < 0 || entry.Table.Seats[currentSeat] == nil {
+		return
+	}
+
+	player := entry.Table.Seats[currentSeat]
+
+	entry.actionTimer = time.AfterFunc(30*time.Second, func() {
+		tm.mu.Lock()
+		defer tm.mu.Unlock()
+
+		e, ok := tm.tables[tableID]
+		if !ok || e.Game == nil || e.Game != entry.Game {
+			return
+		}
+
+		// Verify it's still this player's turn
+		if e.Game.CurrentTurn != currentSeat {
+			return
+		}
+
+		if e.Table.Seats[currentSeat] == nil || e.Table.Seats[currentSeat].ID != player.ID {
+			return
+		}
+
+		tm.logg.Info("Action timeout, auto-folding",
+			slog.String("player_id", player.ID),
+			slog.String("table_id", tableID))
+
+		action := table.Action{
+			PlayerID: player.ID,
+			Type:     table.ActionFold,
+		}
+		if err := e.Game.ProcessAction(action); err == nil {
+			tm.broadcastGameState(tableID, e)
+			if e.Game.State == table.StateComplete || e.Game.State == table.StateShowdown {
+				tm.broadcastHandResult(tableID, e)
+				go tm.scheduleNextHand(tableID)
+			}
+		}
+	})
 }
 
 func (tm *TableManager) broadcastGameState(tableID string, entry *tableManagerEntry) {
@@ -277,23 +352,94 @@ func (tm *TableManager) broadcastGameState(tableID string, entry *tableManagerEn
 		p := entry.Table.Seats[seat]
 		tm.sendStateSnapshot(p.ID, entry)
 	}
+	// Start action timer for current player
+	tm.startActionTimer(tableID, entry)
 }
 
 func (tm *TableManager) broadcastHandResult(tableID string, entry *tableManagerEntry) {
-	winners := []string{}
-	// Simple: find last player in hand
-	for _, seat := range entry.Table.OccupiedSeats() {
-		p := entry.Table.Seats[seat]
-		if p.IsInHand() {
-			winners = append(winners, p.ID)
+	g := entry.Game
+
+	// Calculate rake from total pot
+	totalPot := g.Pot.Total()
+	rake := 0
+	if totalPot > 0 && entry.Table.Config.RakePercent > 0 {
+		rake = int(float64(totalPot) * entry.Table.Config.RakePercent)
+		rakeCap := entry.Table.Config.RakeCap * entry.Table.Config.BigBlind
+		if rake > rakeCap {
+			rake = rakeCap
+		}
+	}
+
+	var winnerIDs []string
+	winnings := make(map[string]int)
+
+	if g.State == table.StateShowdown {
+		// Run full showdown with hand evaluation and pot distribution
+		results := table.RunShowdown(g)
+		if results == nil {
+			return
+		}
+		for _, r := range results {
+			if r.WonAmount > 0 {
+				winnerIDs = append(winnerIDs, r.PlayerID)
+				winnings[r.PlayerID] = r.WonAmount
+			}
+		}
+	} else {
+		// Single remaining player wins without showdown
+		for _, seat := range entry.Table.OccupiedSeats() {
+			p := entry.Table.Seats[seat]
+			if p.IsInHand() {
+				winnerIDs = append(winnerIDs, p.ID)
+				winnings[p.ID] = totalPot
+				break
+			}
+		}
+	}
+
+	// Deduct rake proportionally from winners
+	if rake > 0 && len(winnerIDs) > 0 {
+		totalWon := 0
+		for _, amount := range winnings {
+			totalWon += amount
+		}
+		if totalWon > 0 {
+			deducted := 0
+			for i, pid := range winnerIDs {
+				share := winnings[pid]
+				deduction := int(float64(share) * float64(rake) / float64(totalWon))
+				if i == len(winnerIDs)-1 {
+					// Last winner absorbs rounding remainder
+					deduction = rake - deducted
+				}
+				winnings[pid] = share - deduction
+				if winnings[pid] < 0 {
+					winnings[pid] = 0
+				}
+				deducted += deduction
+			}
+		}
+	}
+
+	// Add winnings to player stacks
+	for pid, amount := range winnings {
+		if amount > 0 {
+			for _, seat := range entry.Table.OccupiedSeats() {
+				p := entry.Table.Seats[seat]
+				if p.ID == pid {
+					p.Stack += amount
+					break
+				}
+			}
 		}
 	}
 
 	payload := HandResultPayload{
 		TableID:   tableID,
-		Winners:   winners,
-		Community: entry.Game.Community,
-		Pot:       entry.Game.Pot.Total(),
+		Winners:   winnerIDs,
+		Community: g.Community,
+		Pot:       totalPot,
+		Rake:      rake,
 	}
 
 	tm.hub.BroadcastToTable(tableID, Message{Type: MsgHandResult, Payload: payload})
@@ -308,6 +454,13 @@ func (tm *TableManager) scheduleNextHand(tableID string) {
 		tm.mu.Unlock()
 		return
 	}
+
+	// Cancel any pending action timer from previous hand
+	if entry.actionTimer != nil {
+		entry.actionTimer.Stop()
+		entry.actionTimer = nil
+	}
+
 	entry.Game = table.NewGame(entry.Table)
 	if err := entry.Game.Start(); err != nil {
 		tm.logg.Error("Failed to restart game",

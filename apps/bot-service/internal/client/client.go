@@ -24,6 +24,7 @@ const (
 	MsgPlayerJoined  MessageType = "player_joined"
 	MsgPlayerLeft    MessageType = "player_left"
 	MsgHandResult    MessageType = "hand_result"
+	MsgYourTurn      MessageType = "your_turn"
 	MsgError         MessageType = "error"
 	MsgPing          MessageType = "ping"
 	MsgPong          MessageType = "pong"
@@ -52,6 +53,8 @@ type StateSnapshotPayload struct {
 	Pot         int           `json:"pot"`
 	CurrentTurn int           `json:"current_turn"`
 	Button      int           `json:"button"`
+	MinRaise    int           `json:"min_raise"`
+	BigBlind    int           `json:"big_blind"`
 }
 
 // CardJSON represents a card as received from server.
@@ -82,6 +85,11 @@ type GameClient struct {
 	onAction    func(phase, action string, amount, pot, stack int)
 	handsPlayed int
 	maxHands    int
+
+	// Reconnection state
+	mu           sync.RWMutex
+	connected    bool
+	reconnecting bool
 }
 
 // NewGameClient creates a new game client for a bot.
@@ -97,19 +105,12 @@ func NewGameClient(wsURL, playerID, tableID string, engine *ai.Engine) *GameClie
 
 // Connect establishes the WebSocket connection and joins the table.
 func (c *GameClient) Connect() error {
-	u, err := url.Parse(c.wsURL)
+	conn, err := c.dial()
 	if err != nil {
 		return err
 	}
-	q := u.Query()
-	q.Set("player_id", c.playerID)
-	u.RawQuery = q.Encode()
-
-	conn, _, err := websocket.DefaultDialer.Dial(u.String(), nil)
-	if err != nil {
-		return fmt.Errorf("dial failed: %w", err)
-	}
 	c.conn = conn
+	c.setConnected(true)
 
 	// Send join table message
 	joinPayload, _ := json.Marshal(map[string]string{
@@ -117,6 +118,7 @@ func (c *GameClient) Connect() error {
 	})
 	if err := c.conn.WriteJSON(Message{Type: MsgJoinTable, Payload: joinPayload}); err != nil {
 		conn.Close()
+		c.setConnected(false)
 		return fmt.Errorf("join failed: %w", err)
 	}
 
@@ -124,9 +126,29 @@ func (c *GameClient) Connect() error {
 	return nil
 }
 
+func (c *GameClient) dial() (*websocket.Conn, error) {
+	u, err := url.Parse(c.wsURL)
+	if err != nil {
+		return nil, err
+	}
+	q := u.Query()
+	q.Set("player_id", c.playerID)
+	u.RawQuery = q.Encode()
+
+	conn, _, err := websocket.DefaultDialer.Dial(u.String(), nil)
+	if err != nil {
+		return nil, fmt.Errorf("dial failed: %w", err)
+	}
+	return conn, nil
+}
+
 // Run starts the read loop, processing game messages.
 func (c *GameClient) Run() {
-	defer c.conn.Close()
+	defer func() {
+		if c.conn != nil {
+			c.conn.Close()
+		}
+	}()
 
 	// Send periodic pings
 	go c.pingLoop()
@@ -143,15 +165,30 @@ func (c *GameClient) Run() {
 			if websocket.IsUnexpectedCloseError(err, websocket.CloseGoingAway, websocket.CloseAbnormalClosure) {
 				log.Printf("[%s] WebSocket error: %v", c.playerID, err)
 			}
+			c.setConnected(false)
+
+			// Attempt reconnection
+			if c.shouldReconnect() {
+				if err := c.reconnect(); err != nil {
+					log.Printf("[%s] Reconnect failed: %v", c.playerID, err)
+					return
+				}
+				continue
+			}
 			return
 		}
 
 		switch msg.Type {
 		case MsgStateSnapshot:
 			c.handleStateSnapshot(msg.Payload)
+		case MsgStateDelta:
+			// TODO: handle delta updates for efficiency
+			log.Printf("[%s] Received state_delta (ignored)", c.playerID)
 		case MsgHandResult:
 			c.handsPlayed++
 			log.Printf("[%s] Hand result received (hands: %d/%d)", c.playerID, c.handsPlayed, c.maxHands)
+		case MsgYourTurn:
+			c.handleYourTurn(msg.Payload)
 		case MsgError:
 			log.Printf("[%s] Error: %s", c.playerID, string(msg.Payload))
 		case MsgPong:
@@ -162,9 +199,64 @@ func (c *GameClient) Run() {
 	}
 }
 
+func (c *GameClient) reconnect() error {
+	c.mu.Lock()
+	if c.reconnecting {
+		c.mu.Unlock()
+		return fmt.Errorf("already reconnecting")
+	}
+	c.reconnecting = true
+	c.mu.Unlock()
+
+	defer func() {
+		c.mu.Lock()
+		c.reconnecting = false
+		c.mu.Unlock()
+	}()
+
+	// Wait a bit before reconnecting
+	time.Sleep(2 * time.Second)
+
+	log.Printf("[%s] Attempting to reconnect...", c.playerID)
+
+	conn, err := c.dial()
+	if err != nil {
+		return err
+	}
+
+	c.conn = conn
+	c.setConnected(true)
+
+	// Re-join table after reconnection
+	joinPayload, _ := json.Marshal(map[string]string{
+		"table_id": c.tableID,
+	})
+	if err := c.conn.WriteJSON(Message{Type: MsgJoinTable, Payload: joinPayload}); err != nil {
+		conn.Close()
+		c.setConnected(false)
+		return fmt.Errorf("re-join failed: %w", err)
+	}
+
+	log.Printf("[%s] Reconnected and rejoined table %s", c.playerID, c.tableID)
+	return nil
+}
+
+func (c *GameClient) shouldReconnect() bool {
+	select {
+	case <-c.stopCh:
+		return false
+	default:
+		return true
+	}
+}
+
+func (c *GameClient) setConnected(v bool) {
+	c.mu.Lock()
+	c.connected = v
+	c.mu.Unlock()
+}
+
 // SetActionCallback registers a callback that will be invoked after each AI decision.
-// The callback runs on the WebSocket read goroutine and must not block.
-// Must be called before Connect/Run.
 func (c *GameClient) SetActionCallback(cb func(phase, action string, amount, pot, stack int)) {
 	c.actionMu.Lock()
 	defer c.actionMu.Unlock()
@@ -216,11 +308,28 @@ func (c *GameClient) pingLoop() {
 		case <-c.stopCh:
 			return
 		case <-ticker.C:
-			if err := c.conn.WriteJSON(Message{Type: MsgPing}); err != nil {
-				return
+			c.mu.RLock()
+			connected := c.connected
+			c.mu.RUnlock()
+			if connected && c.conn != nil {
+				if err := c.conn.WriteJSON(Message{Type: MsgPing}); err != nil {
+					log.Printf("[%s] Ping failed: %v", c.playerID, err)
+				}
 			}
 		}
 	}
+}
+
+func (c *GameClient) handleYourTurn(raw json.RawMessage) {
+	// If server sends explicit your_turn message, handle it
+	var payload struct {
+		TableID string `json:"table_id"`
+		Seat    int    `json:"seat"`
+	}
+	if err := json.Unmarshal(raw, &payload); err != nil {
+		return
+	}
+	log.Printf("[%s] It's my turn! (seat %d)", c.playerID, payload.Seat)
 }
 
 func (c *GameClient) handleStateSnapshot(raw json.RawMessage) {
@@ -264,7 +373,13 @@ func (c *GameClient) handleStateSnapshot(raw json.RawMessage) {
 		}
 	}
 	toCall = maxBet - currentBet
-	minRaise = 10 // TODO: get from table config
+	minRaise = state.MinRaise
+	if minRaise <= 0 {
+		minRaise = state.BigBlind
+	}
+	if minRaise <= 0 {
+		minRaise = 10
+	}
 
 	decision := c.engine.Decide(myHole, community, state.Pot, toCall, myStack, minRaise)
 
@@ -287,6 +402,13 @@ func (c *GameClient) handleStateSnapshot(raw json.RawMessage) {
 	log.Printf("[%s] Decision: %s %d (delay %v)", c.playerID, decision.Action, decision.Amount, decision.Delay)
 
 	time.AfterFunc(decision.Delay, func() {
+		c.mu.RLock()
+		connected := c.connected
+		c.mu.RUnlock()
+		if !connected {
+			log.Printf("[%s] Cannot send action: not connected", c.playerID)
+			return
+		}
 		if err := c.conn.WriteJSON(Message{Type: MsgAction, Payload: actionPayload}); err != nil {
 			log.Printf("[%s] Failed to send action: %v", c.playerID, err)
 		}

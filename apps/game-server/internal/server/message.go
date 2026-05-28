@@ -59,6 +59,8 @@ type StateSnapshotPayload struct {
 	Pot         int                 `json:"pot"`
 	CurrentTurn int                 `json:"current_turn"`
 	Button      int                 `json:"button"`
+	MinRaise    int                 `json:"min_raise"`
+	BigBlind    int                 `json:"big_blind"`
 }
 
 // PlayerState represents a player's visible state
@@ -86,10 +88,11 @@ type PlayerEventPayload struct {
 
 // HandResultPayload sends hand outcome
 type HandResultPayload struct {
-	TableID   string                  `json:"table_id"`
-	Winners   []string                `json:"winners"`
-	Community []engine.Card           `json:"community"`
-	Pot       int                     `json:"pot"`
+	TableID   string        `json:"table_id"`
+	Winners   []string      `json:"winners"`
+	Community []engine.Card `json:"community"`
+	Pot       int           `json:"pot"`
+	Rake      int           `json:"rake"`
 }
 
 // ErrorPayload sends an error message
